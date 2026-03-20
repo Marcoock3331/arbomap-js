@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mapa Interactivo - ARBOMAP</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/liquid-theme.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        .leaflet-pane img, .leaflet-tile, .leaflet-marker-icon { 
+            max-width: none !important; 
+            max-height: none !important; 
+        }
+        #map {
+            height: 75vh;
+            width: 100%;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            z-index: 1;
+        }
+        /* Ocultamos la ficha técnica al inicio */
+        .ficha-container { display: none; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h3 mb-0 text-white font-weight-bold">Explorador del Campus</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="row">
+                        
+                        <div class="col-lg-8">
+                            <div class="card shadow mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                                <div class="card-body p-0">
+                                    <div id="map"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            
+                            <div id="mensajeInicial" class="text-center text-white p-5">
+                                <i class="fas fa-map-marked-alt fa-4x mb-3 text-gray-300"></i>
+                                <h4>Selecciona un árbol</h4>
+                                <p class="text-white-50">Haz clic en un marcador para ver su historial y estado actual.</p>
+                            </div>
+
+                            <div id="fichaTecnica" class="card shadow mb-4 ficha-container" 
+                                 style="background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden;">
+                                
+                                <div style="height: 220px; overflow: hidden; position: relative;">
+                                    <img id="fichaFoto" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <div style="position: absolute; bottom: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); width: 100%; padding: 20px;">
+                                        <h5 id="fichaNombreC" class="text-white font-weight-bold m-0">...</h5>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-xs font-weight-bold text-info mb-1">Nombre Común</h6>
+                                    <h3 id="fichaNombreComun" class="font-weight-bold text-white mb-4">...</h3>
+                                    
+                                    <div class="row mb-3 pb-2 border-bottom border-secondary">
+                                        <div class="col-5 small font-weight-bold text-gray-400">Etiqueta:</div>
+                                        <div class="col-7 font-weight-bold text-white" id="fichaID">...</div>
+                                    </div>
+
+                                    <div class="row mb-3 pb-2 border-bottom border-secondary">
+                                        <div class="col-5 small font-weight-bold text-gray-400">Ubicación:</div>
+                                        <div class="col-7 text-white" id="fichaZona">...</div>
+                                    </div>
+
+                                    <div class="row mb-3 pb-2 border-bottom border-secondary">
+                                        <div class="col-5 small font-weight-bold text-gray-400">Estado:</div>
+                                        <div class="col-7" id="fichaEstado">...</div>
+                                    </div>
+
+                                    <button class="btn btn-danger btn-block rounded-pill mt-4" id="btnCerrarFicha">
+                                        Cerrar Ficha
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sb-admin-2.min.js"></script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="js/mapa-logic.js"></script>
+</body>
+</html>

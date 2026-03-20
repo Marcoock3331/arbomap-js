@@ -1,0 +1,96 @@
+/* css/liquid-theme.css */
+
+/* 1. FONDO PRINCIPAL (Naturaleza oscura) */
+body {
+    /* Imagen de fondo de bosque con una capa oscura encima para que el texto resalte */
+    background: linear-gradient(rgba(10, 40, 20, 0.85), rgba(0, 20, 10, 0.9)), 
+                url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    font-family: 'Nunito', sans-serif;
+    color: #e2e2e2;
+}
+
+/* 2. ESTRUCTURA TRANSPARENTE */
+#wrapper #content-wrapper {
+    background-color: transparent !important;
+}
+
+/* 3. EFECTO CRISTAL (Glassmorphism) para Sidebar, Topbar y Cards */
+.sidebar, .topbar, .card, .modal-content {
+    background: rgba(255, 255, 255, 0.08) !important; /* Blanco muy transparente */
+    backdrop-filter: blur(12px); /* El efecto borroso detrás */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borde sutil */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* 4. AJUSTES DE TEXTO (Para que se lea bien sobre oscuro) */
+.text-gray-800, .h3, h1, h2, h3, h4, h5, h6, .card-header {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Sombra suave para leer mejor */
+}
+
+.text-gray-600, .text-gray-500, label {
+    color: #d1d3e2 !important;
+}
+
+/* 5. TABLAS (DataTables) ESTILO CRISTAL */
+.table {
+    color: #fff !important;
+}
+.table-bordered td, .table-bordered th {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(255,255,255,0.1); /* Brillo al pasar el mouse */
+}
+/* Paginación de la tabla */
+.page-item.disabled .page-link, .page-link {
+    background-color: transparent;
+    border-color: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+/* 6. INPUTS Y FORMULARIOS */
+.form-control, .form-control-file {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.form-control:focus {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border-color: #1cc88a; /* Verde Arbomap */
+}
+
+/* 7. MODALES */
+.modal-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.modal-footer {
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.close {
+    color: #fff;
+    text-shadow: none;
+}   
+/* --- CORRECCIÓN URGENTE PARA EL MAPA --- */
+
+/* 1. Evita que Bootstrap rompa los cuadros del mapa */
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-pane img, 
+.leaflet-container .leaflet-tile-container img, 
+.leaflet-container img.leaflet-marker-icon, 
+.leaflet-container img.leaflet-marker-shadow {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+/* 2. Asegura que el contenedor tenga altura (Por si acaso) */
+#dashboardMap, #map {
+    z-index: 1; /* Asegura que esté por encima del fondo */
+    min-height: 450px; /* Fuerza una altura mínima */
+    display: block;
+}
