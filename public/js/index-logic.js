@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         .then(html => {
             document.getElementById('sidebar-container').innerHTML = html;
             
-            // ¡Esta línea hace que la página aparezca suavemente sin brincos!
-            document.body.classList.add('listo');
+            // Forzamos un micro-retraso (50ms) para que el navegador acomode el menú ANTES de prender la luz (Anti-Ghosting Bulletproof)
+            setTimeout(() => {
+                document.body.classList.add('listo');
+            }, 50);
         })
         .catch(error => console.error("Error al cargar el menú:", error));
 
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // 5. Configurar e instanciar Gráfica de Dona (con Animación estilo PHP)
+        // 5. Configurar e instanciar Gráfica de Dona (con Animación)
         const ctxElement = document.getElementById('saludPieChart');
         if (ctxElement) {
             const ctx = ctxElement.getContext('2d');
@@ -48,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     labels: ['Bueno', 'Regular', 'Malo', 'Sin Revisión'],
                     datasets: [{
                         data: [buenos, regulares, malos, sinRevisar],
-                        backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b', '#858796'], // Tus colores exactos
+                        backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b', '#858796'], 
                         hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617', '#6e707e'],
                         hoverBorderColor: "rgba(234, 236, 244, 1)",
                         borderWidth: 1,
@@ -58,12 +60,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '70%', // Grosor de la dona
-                    // --- AQUÍ ESTÁ LA ANIMACIÓN ---
+                    cutout: '70%', 
                     animation: {
                         animateRotate: true,
                         animateScale: true,
-                        duration: 1500, // Dura 1.5 segundos en dibujarse
+                        duration: 1500, 
                         easing: 'easeOutQuart'
                     },
                     plugins: {
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // 6. Configurar Mapa ITM (Igual que en tu PHP)
+        // 6. Configurar Mapa ITM 
         const mapElement = document.getElementById('dashboardMap');
         if (mapElement) {
             const map = L.map('dashboardMap').setView([19.7267, -101.1619], 16);

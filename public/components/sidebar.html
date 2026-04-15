@@ -1,52 +1,17 @@
-<ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
-
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
-        <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-leaf"></i>
-        </div>
-        <div class="sidebar-brand-text mx-3">ARBOMAP</div>
+<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" style="background-color: #1A252F;">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center my-3" href="index.html">
+        <div class="sidebar-brand-icon"><i class="fas fa-tree text-success"></i></div>
+        <div class="sidebar-brand-text mx-3">ARBOMAP <sup>UTM</sup></div>
     </a>
-
     <hr class="sidebar-divider my-0">
-
-    <li class="nav-item active">
-        <a class="nav-link" href="index.html">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Panel General</span>
-        </a>
-    </li>
-
+    <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Panel General</span></a></li>
     <hr class="sidebar-divider">
-
-    <div class="sidebar-heading">
-        Gestión
-    </div>
-
-    <li class="nav-item">
-        <a class="nav-link" href="mapa.html">
-            <i class="fas fa-fw fa-map-marker-alt"></i>
-            <span>Mapa Interactivo</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link" href="inventario.html">
-            <i class="fas fa-fw fa-tree"></i>
-            <span>Inventario Árboles</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-fw fa-calendar-alt"></i>
-            <span>Reforestación</span>
-        </a>
-    </li>
-
+    <div class="sidebar-heading">GESTIÓN OPERATIVA</div>
+    <li class="nav-item"><a class="nav-link" href="mapa.html"><i class="fas fa-fw fa-map-marker-alt"></i><span>Mapa Interactivo</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="inventario.html"><i class="fas fa-fw fa-seedling"></i><span>Inventario Árboles</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="reforestacion.html"><i class="fas fa-fw fa-calendar-alt"></i><span>Reforestación</span></a></li>
+    <hr class="sidebar-divider">
+    <li class="nav-item"><a class="nav-link" href="perfil.html"><i class="fas fa-fw fa-user"></i><span>Mi Perfil Forestal</span></a></li>
     <hr class="sidebar-divider d-none d-md-block">
-
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
-
+    <li class="nav-item mt-auto"><a class="nav-link text-danger font-weight-bold" href="#" onclick="cerrarSesion(event)"><i class="fas fa-fw fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
 </ul>

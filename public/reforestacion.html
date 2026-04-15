@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Gestión de Reforestación - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+        .card-campana { border-radius: 12px; border: none; border-left: 5px solid #009688; transition: 0.3s; }
+        .card-campana:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        .progress { height: 10px; border-radius: 5px; background-color: #eaecf4; }
+        .btn-success-utm { background-color: #009688; border: none; }
+        .btn-success-utm:hover { background-color: #00796b; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Gestión de Reforestación</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h2 class="h5 mb-0 text-gray-800 font-weight-bold">Campañas y Propuestas</h2>
+                        <button class="btn btn-success-utm rounded-pill px-4 shadow-sm text-white font-weight-bold" data-toggle="modal" data-target="#modalPropuesta">
+                            <i class="fas fa-plus mr-1"></i> Nueva Propuesta
+                        </button>
+                    </div>
+
+                    <div class="row" id="contenedor-campanas">
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-spinner fa-spin fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPropuesta" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold">Proponer Reforestación</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formPropuesta">
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Nombre de la Propuesta</label>
+                            <input type="text" name="nombre_propuesta" class="form-control rounded-pill border-light bg-light" placeholder="Ej. Pulmón Edificio I" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Cantidad de Árboles (Meta)</label>
+                            <input type="number" name="cantidad_meta" class="form-control rounded-pill border-light bg-light" placeholder="Ej. 10" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-success rounded-pill px-5 font-weight-bold shadow-sm" style="background-color: #009688;">Enviar para Aprobación</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAprobar" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title font-weight-bold">Aprobar y Activar Campaña</h5>
+                </div>
+                <form id="formAprobar">
+                    <input type="hidden" name="id_propuesta" id="aprobar-id">
+                    <input type="hidden" name="cantidad_esperada" id="aprobar-meta-temp">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Asignar Zona / Sitio</label>
+                            <select name="id_sitio" id="select-sitios" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Fecha Programada</label>
+                            <input type="date" name="fecha_evento" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn-block rounded-pill">Activar Campaña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/reforestacion-logic.js"></script>
+</body>
+</html>

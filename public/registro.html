@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registro - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { background-color: #00897b; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
+        .card-auth { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 40px; }
+        .btn-auth { background-color: #2e7d32; color: white; border-radius: 8px; font-weight: bold; }
+        .btn-auth:hover { background-color: #1b5e20; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card card-auth bg-white">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-seedling fa-3x text-success"></i>
+                        <h3 class="font-weight-bold text-dark mt-2">Unete a ArboMap <span style="color: #00897b;">UTM</span></h3>
+                        <p class="text-muted small">Ingresa con tu matricula para ser voluntario.</p>
+                    </div>
+
+                    <div id="success-msg" class="alert alert-success text-center small py-3 font-weight-bold" style="display:none;">
+                        Cuenta creada con exito! Ya puedes iniciar sesion.
+                    </div>
+                    
+                    <form id="formRegistro">
+                        <div class="form-group mb-3">
+                            <input type="text" id="nombre" class="form-control form-control-lg border-light bg-light" required placeholder="Nombre Completo" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-3">
+                            <input type="text" id="matricula" class="form-control form-control-lg border-light bg-light" required placeholder="MATRICULA (EJ. UTM241085TI)" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-4">
+                            <input type="password" id="password" class="form-control form-control-lg border-light bg-light" required placeholder="Contrasena" style="font-size: 0.9rem;">
+                        </div>
+                        <button type="submit" class="btn btn-auth btn-block py-3 shadow-sm mb-4">Crear Cuenta</button>
+                    </form>
+                    
+                    <div id="error-msg" class="alert alert-danger text-center small py-2" style="display:none;"></div>
+                    
+                    <div class="text-center mt-2 border-top pt-4">
+                        <a href="login.html" class="small font-weight-bold text-info text-decoration-none">Ya tienes cuenta? Inicia sesion aqui!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formRegistro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                nombre_completo: document.getElementById('nombre').value,
+                matricula: document.getElementById('matricula').value,
+                password: document.getElementById('password').value
+            };
+
+            const errDiv = document.getElementById('error-msg');
+            const successDiv = document.getElementById('success-msg');
+            const form = document.getElementById('formRegistro');
+
+            try {
+                const res = await fetch('/api/registro', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const result = await res.json();
+
+                if (result.success) {
+                    form.style.display = 'none';
+                    errDiv.style.display = 'none';
+                    successDiv.style.display = 'block';
+                } else {
+                    errDiv.innerText = result.message;
+                    errDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errDiv.innerText = "Error de conexion.";
+                errDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

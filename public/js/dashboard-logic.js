@@ -1,51 +1,63 @@
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. CARGAR EL SIDEBAR (Porque ya no tenemos 'include' de PHP)
-    // Tienes que crear un archivo sidebar.html en public/components/
-    fetch('components/sidebar.html')
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('sidebar-container').innerHTML = html;
-        })
-        .catch(err => console.log("Ojo: No has creado el archivo components/sidebar.html todavía"));
+// UBICACION: public/js/dashboard-logic.js
+let map, chartPie;
 
-    // 2. INICIALIZAR EL MAPA (Centrado en el tec)
-    var map = L.map('dashboardMap').setView([19.7267, -101.1619], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
+document.addEventListener('DOMContentLoaded', async () => {
+    const sidebar = document.getElementById('sidebar-container');
+    const mostrar = () => document.body.classList.add('listo');
+    const cached = sessionStorage.getItem('sidebarHTML');
+    if (cached) { sidebar.innerHTML = cached; } 
+    else { const r = await fetch('components/sidebar.html'); const h = await r.text(); sessionStorage.setItem('sidebarHTML', h); sidebar.innerHTML = h; }
+    setTimeout(mostrar, 100);
 
-    // 3. PEDIR DATOS AL SERVIDOR (Aquí ocurre la magia)
-    fetch('/api/dashboard-stats')
-        .then(response => response.json())
-        .then(data => {
-            // A. Rellenar los numeritos
-            document.getElementById('total-arboles').innerText = data.totalArboles;
-            document.getElementById('total-especies').innerText = data.totalEspecies;
-            document.getElementById('total-sanos').innerText = data.totalSanos || 0;
+    map = L.map('dashboardMap').setView([19.7267, -101.1619], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-            // B. Dibujar los puntos en el mapa
-            var treeIcon = L.icon({
-                iconUrl: 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png',
-                iconSize: [25, 25], iconAnchor: [12, 25], popupAnchor: [0, -25]
-            });
-
-            data.arboles.forEach(arbol => {
-                var lat = parseFloat(arbol.latitud);
-                var lng = parseFloat(arbol.longitud);
-
-                if (lat && lng) {
-                    var color = arbol.estado === 'Malo' ? 'red' : (arbol.estado === 'Regular' ? 'orange' : 'green');
-                    var popupContent = `<div class='text-center'>
-                                            <b>${arbol.nombre_comun}</b><br>
-                                            <span style='color:${color}'>${arbol.estado || 'Sin revisión'}</span>
-                                        </div>`;
-                    
-                    L.marker([lat, lng], {icon: treeIcon})
-                        .addTo(map)
-                        .bindPopup(popupContent);
-                }
-            });
-        })
-        .catch(error => console.error('Error conectando con el servidor:', error));
+    cargarTodo();
 });
+
+function cargarTodo() {
+    fetch('/api/dashboard-stats').then(r => r.json()).then(data => {
+        document.getElementById('total-arboles').innerText = data.totalArboles;
+        document.getElementById('total-especies').innerText = data.totalEspecies;
+        document.getElementById('total-sanos').innerText = data.totalSanos;
+
+        let b = 0, r = 0, m = 0;
+        const icon = L.divIcon({
+            html: '<i class="fas fa-tree" style="color: #2e7d32; font-size: 24px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></i>',
+            className: 'custom-tree', iconSize: [24, 24], iconAnchor: [12, 24]
+        });
+
+        data.arboles.forEach(a => {
+            if (a.estado === 'Bueno') b++; else if (a.estado === 'Regular') r++; else if (a.estado === 'Malo') m++;
+            if(a.latitud) L.marker([a.latitud, a.longitud], {icon}).bindPopup(`<b>${a.nombre_comun}</b><br>${a.codigo_etiqueta}`).addTo(map);
+        });
+
+        document.getElementById('count-bueno').innerText = b;
+        document.getElementById('count-regular').innerText = r;
+        document.getElementById('count-malo').innerText = m;
+        generarGrafica(b, r, m);
+    });
+
+    fetch('/api/stats-zonas').then(r => r.json()).then(stats => {
+        const tb = document.getElementById('tabla-stats-zonas');
+        tb.innerHTML = '';
+        stats.forEach(s => {
+            let p = Math.round((s.sanos / s.total) * 100);
+            let c = p > 70 ? 'success' : (p > 40 ? 'warning' : 'danger');
+            tb.innerHTML += `<tr><td class="pl-3"><b>${s.nombre_zona}</b></td><td class="text-center">${s.total}</td><td class="text-center text-${c}"><b>${p}%</b></td></tr>`;
+        });
+    });
+
+    fetch('/api/sitios').then(r => r.json()).then(zonas => {
+        zonas.forEach(z => { if(z.coordenadas_poligono) L.geoJSON(JSON.parse(z.coordenadas_poligono), {style:{color:'#009688', weight:2, fillOpacity:0.1}}).addTo(map); });
+    });
+}
+
+function generarGrafica(b, r, m) {
+    if(chartPie) chartPie.destroy();
+    chartPie = new Chart(document.getElementById("myPieChart"), {
+        type: 'doughnut',
+        data: { labels: ["Bueno", "Regular", "Malo"], datasets: [{ data: [b, r, m], backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'] }] },
+        options: { maintainAspectRatio: false, legend: { display: false }, cutoutPercentage: 80 }
+    });
+}

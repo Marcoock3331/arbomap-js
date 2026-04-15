@@ -4,6 +4,17 @@
 body {
     background: linear-gradient(135deg, #1a2a1f 0%, #0d1310 100%) !important;
     background-attachment: fixed;
+    
+    /* ==========================================
+       TRANSICIÓN SUAVE DE PÁGINAS (ANTI-GHOSTING)
+       ========================================== */
+    opacity: 0; 
+    transition: opacity 0.3s ease-in-out; 
+}
+
+/* Clase que se inyecta con JS cuando el menú ya cargó */
+body.listo { 
+    opacity: 1; 
 }
 
 #wrapper #content-wrapper {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar Sesion - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { background-color: #197a61; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
+        .card-auth { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 40px; }
+        .btn-auth { background-color: #00897b; color: white; border-radius: 8px; font-weight: bold; }
+        .btn-auth:hover { background-color: #00695c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card card-auth bg-white">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-tree fa-3x" style="color: #00897b;"></i>
+                        <h3 class="font-weight-bold text-dark mt-2">ARBOMAP <span style="color: #00897b;">UTM</span></h3>
+                        <p class="text-muted small">Bienvenido, ingresa tu matricula institucional.</p>
+                    </div>
+                    
+                    <form id="formLogin">
+                        <div class="form-group mb-4">
+                            <input type="text" id="matricula" class="form-control form-control-lg border-light bg-light" required placeholder="TU MATRICULA" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-4">
+                            <input type="password" id="password" class="form-control form-control-lg border-light bg-light" required placeholder="Contrasena" style="font-size: 0.9rem;">
+                        </div>
+                        <button type="submit" class="btn btn-auth btn-block py-3 shadow-sm mb-4">Iniciar Sesion</button>
+                    </form>
+                    
+                    <div id="error-msg" class="alert alert-danger text-center small py-2" style="display:none;"></div>
+                    
+                    <div class="text-center mt-2 border-top pt-4">
+                        <a href="registro.html" class="small font-weight-bold text-success text-decoration-none">Eres nuevo? Crea tu cuenta de voluntario!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const matricula = document.getElementById('matricula').value;
+            const password = document.getElementById('password').value;
+            const errDiv = document.getElementById('error-msg');
+
+            try {
+                const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matricula, password }) });
+                const data = await res.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'index.html'; 
+                } else {
+                    errDiv.innerText = data.message;
+                    errDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errDiv.innerText = "Error conectando con el servidor.";
+                errDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

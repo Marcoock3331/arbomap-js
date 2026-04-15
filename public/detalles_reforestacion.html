@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Detalles de Reforestación - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1A252F; display: flex; } /* Sidebar Azul Noche */
+        .table-custom th { border-top: none !important; border-bottom: 2px solid #e3e6f0 !important; color: #6e707e; font-size: 0.85rem; }
+        .table-custom td { vertical-align: middle !important; }
+    </style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars text-white"></i></button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Detalles de la Reforestación</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <a href="reforestacion.html" class="btn btn-sm btn-white border shadow-sm font-weight-bold mb-4 rounded-pill px-3">
+                        <i class="fas fa-arrow-left mr-1"></i> Volver a Campañas
+                    </a>
+
+                    <div class="card shadow-sm border-0 mb-4" style="border-top: 4px solid #009688;">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h3 id="det-nombre-campana" class="font-weight-bold text-gray-800 mb-2">Cargando datos...</h3>
+                                    <div class="d-flex text-muted small font-weight-bold">
+                                        <div class="mr-4"><i class="fas fa-map-marker-alt text-danger mr-1"></i> <span id="det-zona">---</span></div>
+                                        <div class="mr-4"><i class="fas fa-calendar-alt text-primary mr-1"></i> <span id="det-fecha">---</span></div>
+                                        <div><i class="fas fa-info-circle text-info mr-1"></i> Estado: <span id="det-estado">---</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-right mt-3 mt-md-0 border-left">
+                                    <div class="font-weight-bold text-gray-700 mb-1" id="det-progreso-texto">0 / 0 Árboles</div>
+                                    <div class="progress shadow-sm mb-1" style="height: 12px; border-radius: 6px;">
+                                        <div id="det-progreso-barra" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-success font-weight-bold" id="det-progreso-pct">0% Completado</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                            <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-leaf mr-2"></i>Árboles Registrados en esta Campaña</h6>
+                            <span class="badge badge-light border text-gray-700 px-3 py-2 shadow-sm rounded-pill" id="badge-total-arboles">0 árboles</span>
+                        </div>
+                        <div class="card-body pt-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-custom">
+                                    <thead class="bg-light font-weight-bold text-uppercase text-gray-600 border-top">
+                                        <tr>
+                                            <th class="pl-3">ID</th>
+                                            <th>Código / Etiqueta</th>
+                                            <th>Especie Plantada</th>
+                                            <th class="text-center">Fecha Registro</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-arboles-campana">
+                                        <tr><td colspan="6" class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin mr-2 fa-2x"></i></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/detalles_reforestacion-logic.js"></script>
+</body>
+</html>

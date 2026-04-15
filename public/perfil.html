@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi Perfil - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        .topbar-utm { background-color: #00897b; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+        .bg-perfil { background-color: #1b5e20; border-radius: 15px; }
+        .avatar-circle { width: 100px; height: 100px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #00897b; font-weight: bold; position: relative; }
+        .camera-icon { position: absolute; bottom: 0; right: 0; background: #00897b; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 3px solid white; font-size: 0.8rem; }
+        .card-arbol { transition: transform 0.2s; border: none; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-arbol:hover { transform: translateY(-5px); }
+        .img-arbol { height: 180px; object-fit: cover; width: 100%; }
+        .badge-estado { position: absolute; top: 10px; right: 10px; font-size: 0.85rem; padding: 5px 15px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars text-white"></i></button>
+                        <h1 class="h4 mb-0 text-white font-weight-bold"><i class="fas fa-leaf mr-2"></i> Mi perfil</h1>
+                    </div>
+                    <div class="text-white font-weight-bold d-flex align-items-center">
+                        <span id="topbar-name" class="mr-2">Cargando...</span>
+                        <div id="topbar-initials" class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center font-weight-bold" style="width: 35px; height: 35px; font-size: 0.9rem;">--</div>
+                    </div>
+                </nav>
+
+                <div class="container-fluid px-4">
+                    <div class="bg-perfil text-white p-4 mb-5 shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex align-items-center mb-3 mb-md-0">
+                            <div class="avatar-circle mr-4 shadow">
+                                <span id="perfil-iniciales">--</span>
+                                <div class="camera-icon"><i class="fas fa-camera"></i></div>
+                            </div>
+                            <div>
+                                <h2 id="perfil-nombre" class="font-weight-bold mb-1">Cargando...</h2>
+                                <p class="mb-2" style="font-size: 1.1rem;"><i class="fas fa-id-card mr-2"></i><span id="perfil-matricula">--</span></p>
+                                <span class="badge bg-white text-success px-3 py-1 rounded-pill font-weight-bold"><i class="fas fa-seedling mr-1"></i> <span id="perfil-rol">Voluntario</span></span>
+                            </div>
+                        </div>
+                        <div class="text-right text-center text-md-right">
+                            <div id="perfil-conteo" class="display-3 font-weight-bold" style="line-height: 1;">0</div>
+                            <div style="font-size: 1.1rem; opacity: 0.9;">Arboles Apadrinados</div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-weight-bold text-gray-800 mb-4"><i class="fas fa-tree text-success mr-2"></i> Mi Bosque Asignado</h4>
+                    <div class="row" id="contenedor-arboles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/perfil-logic.js"></script>
+</body>
+</html>

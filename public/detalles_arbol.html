@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expediente Clínico - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1a252f; display: flex; }
+        .timeline-item { border-left: 3px solid #e3e6f0; padding-left: 20px; position: relative; }
+        .timeline-item::before {
+            content: ''; position: absolute; width: 15px; height: 15px;
+            background: white; border: 3px solid #009688; border-radius: 50%;
+            left: -9px; top: 0;
+        }
+        #mini-mapa { height: 180px; border-radius: 10px; width: 100%; }
+        .ficha-tecnica { border-top: 5px solid #009688; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">
+                        <i class="fas fa-notes-medical mr-2"></i>Expediente Clínico
+                    </h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="mb-4">
+                        <a href="inventario.html" class="btn btn-sm btn-light border shadow-sm rounded-pill px-3">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver al Inventario
+                        </a>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow-sm mb-4 ficha-tecnica">
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        <i class="fas fa-tree fa-3x text-gray-200 mb-2"></i>
+                                        <h3 class="font-weight-bold text-dark mb-0" id="det-nombre-comun">Cargando...</h3>
+                                        <p class="text-gray-500 font-italic" id="det-nombre-cientifico">---</p>
+                                        <span class="badge badge-light border px-3 py-2 text-dark font-weight-bold">
+                                            <i class="fas fa-tag mr-1 text-info"></i> <span id="det-codigo">---</span>
+                                        </span>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="mb-4 text-center" id="seccion-padrino">
+                                        <h6 class="font-weight-bold text-success text-uppercase small">Padrino Asignado</h6>
+                                        <div class="d-flex align-items-center justify-content-center mt-2">
+                                            <div class="avatar-sm bg-light rounded-circle border p-2 mr-2">
+                                                <i class="fas fa-user-check text-success"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <div class="font-weight-bold text-dark" id="det-cuidador">Sin asignar</div>
+                                                <div class="small text-muted" id="det-fecha-adopcion">---</div>
+                                            </div>
+                                        </div>
+                                        <div id="area-adopcion" class="mt-3"></div>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="mb-3">
+                                        <p class="small text-muted mb-1"><i class="fas fa-map-marker-alt mr-1"></i> <strong>Zona:</strong></p>
+                                        <p class="text-dark" id="det-zona">---</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p class="small text-muted mb-1"><i class="fas fa-calendar-alt mr-1"></i> <strong>Plantado el:</strong></p>
+                                        <p class="text-dark" id="det-fecha">---</p>
+                                    </div>
+                                    <div class="mb-4">
+                                        <p class="small text-muted mb-1"><i class="fas fa-crosshairs mr-1"></i> <strong>Coordenadas:</strong></p>
+                                        <p class="small text-gray-700" id="det-coords">---</p>
+                                        <div id="mini-mapa" class="border shadow-sm"></div>
+                                    </div>
+
+                                    <div class="bg-light p-3 rounded">
+                                        <h6 class="font-weight-bold text-dark small">Descripción de la Especie:</h6>
+                                        <p class="small text-muted mb-0" id="det-descripcion">---</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                                    <h5 class="m-0 font-weight-bold text-success">
+                                        <i class="fas fa-history mr-2"></i>Historial de Reportes
+                                    </h5>
+                                    <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" data-toggle="modal" data-target="#modalSeguimiento">
+                                        <i class="fas fa-plus mr-1"></i> Nuevo Reporte
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="contenedor-historial">
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-spinner fa-spin fa-2x text-gray-300"></i>
+                                            <p class="mt-2 text-muted">Cargando registros médicos...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSeguimiento" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold">Nuevo Reporte de Salud</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formSeguimiento">
+                    <div class="modal-body">
+                        <input type="hidden" name="id_arbol" id="inputIDArbolModal">
+                        
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Estado General</label>
+                            <select name="estado_salud" class="form-control" required>
+                                <option value="Bueno">Bueno (Saludable)</option>
+                                <option value="Regular">Regular (Requiere atención)</option>
+                                <option value="Malo">Malo (Estado Crítico)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Foto de Evidencia</label>
+                            <input type="file" name="foto" class="form-control-file border p-1 rounded" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Observaciones / Tratamiento</label>
+                            <textarea name="comentarios" class="form-control" rows="4" placeholder="Describe cómo se encuentra el árbol..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4">Guardar Reporte</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarReporte" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title font-weight-bold">Editar Observación Médica</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formEditarReporte">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-rep-id">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-dark">Estado de Salud</label>
+                            <select id="edit-rep-estado" class="form-control">
+                                <option value="Bueno">Bueno</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Malo">Malo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-dark">Comentarios Actualizados</label>
+                            <textarea id="edit-rep-comentarios" class="form-control" rows="4" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" class="btn btn-warning font-weight-bold rounded-pill px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/detalles_arbol-logic.js"></script>
+</body>
+</html>
