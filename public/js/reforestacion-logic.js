@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. CARGA DE SIDEBAR
     const sidebarContainer = document.getElementById('sidebar-container');
     const mostrarPagina = () => document.body.classList.add('listo');
-    
+
     try {
         const cachedSidebar = sessionStorage.getItem('sidebarHTML');
         if (cachedSidebar) {
@@ -18,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     cargarReforestaciones();
 
-    // 2. FORMULARIO: NUEVA PROPUESTA
+    // FORMULARIO: NUEVA PROPUESTA
     document.getElementById('formPropuesta').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(e.target).entries());
@@ -31,12 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const result = await res.json();
             if (result.success) {
                 $('#modalPropuesta').modal('hide');
+                e.target.reset();
                 cargarReforestaciones();
             }
         } catch (err) { console.error("Error al enviar propuesta:", err); }
     });
 
-    // 3. FORMULARIO: APROBAR (ADMIN)
+    // FORMULARIO: APROBAR
     document.getElementById('formAprobar').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(e.target).entries());
@@ -56,72 +56,92 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function cargarReforestaciones() {
+    const contenedor = document.getElementById('contenedor-campanas');
+    contenedor.innerHTML = `<tr><td colspan="7" class="text-center py-4">
+        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+    </td></tr>`;
+
     try {
-        const res = await fetch('/api/reforestacion');
+        const res = await fetch('/api/reforestacion');  // ← ahora sí existe
         const campanas = await res.json();
-        const contenedor = document.getElementById('contenedor-campanas');
         const user = JSON.parse(sessionStorage.getItem('user'));
 
-        contenedor.innerHTML = '';
-
-        if (campanas.length === 0) {
-            contenedor.innerHTML = '<div class="col-12 text-center text-muted">No hay campañas registradas aún.</div>';
+        if (!Array.isArray(campanas) || campanas.length === 0) {
+            contenedor.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">
+                No hay campañas registradas aún.
+            </td></tr>`;
             return;
         }
 
-        campanas.forEach(c => {
-            const plantados = c.cantidad_plantada || 0;
-            const meta = c.cantidad_meta || 1;
-            const pct = Math.round((plantados / meta) * 100);
-            
-            const esPropuesta = c.estatus === 'Pendiente';
-            const badgeColor = esPropuesta ? 'secondary' : (c.estado === 'Completada' ? 'success' : 'info');
-            const statusLabel = esPropuesta ? 'PROPUESTA' : c.estado;
+        contenedor.innerHTML = campanas.map(c => {
+            const plantados  = c.cantidad_plantada || 0;
+            const meta       = c.cantidad_meta || 1;
+            const pct        = Math.min(Math.round((plantados / meta) * 100), 100);
+            const esPropuesta = !c.id_reforestacion; // sin campaña = solo propuesta
 
-            contenedor.innerHTML += `
-                <div class="col-xl-4 col-lg-6 mb-4">
-                    <div class="card shadow-sm h-100 card-campana">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="font-weight-bold text-dark mb-0">${c.nombre_propuesta}</h5>
-                                <span class="badge badge-${badgeColor} px-2 py-1">${statusLabel}</span>
-                            </div>
-                            
-                            <div class="small text-muted mb-3">
-                                <div class="mb-1"><i class="fas fa-map-marker-alt mr-2 text-danger"></i>${c.nombre_zona || 'Sin zona asignada'}</div>
-                                <div><i class="fas fa-calendar mr-2 text-primary"></i>${c.fecha_evento ? new Date(c.fecha_evento).toLocaleDateString() : 'Fecha pendiente'}</div>
-                            </div>
+            // Badge de estado
+            const badgePropuesta = esPropuesta
+                ? `<span class="badge badge-warning px-2 py-1">Propuesta: ${c.estatus}</span>`
+                : `<span class="badge badge-success px-2 py-1">Propuesta: ${c.estatus}</span>`;
 
-                            <div class="mb-1 small font-weight-bold text-gray-800">Progreso: ${plantados} de ${meta} árboles</div>
-                            <div class="progress mb-4 shadow-sm">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: ${Math.min(pct, 100)}%"></div>
-                            </div>
+            const badgeEstado = !esPropuesta
+                ? `<br><small class="text-muted"><i class="fas fa-info-circle mr-1"></i>${c.estado}</small>`
+                : '';
 
-                            <div class="d-flex justify-content-between">
-                                ${!esPropuesta ? `
-                                    <a href="detalles_reforestacion.html?id=${c.id_reforestacion}" class="btn btn-sm btn-outline-info rounded-circle shadow-sm" title="Ver Detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                ` : '<div></div>'}
+            // Fecha
+            const fecha = c.fecha_evento
+                ? new Date(c.fecha_evento).toLocaleDateString('es-MX')
+                : '<span class="text-muted">Pendiente</span>';
 
-                                ${esPropuesta && user.id_rol === 1 ? `
-                                    <button class="btn btn-primary btn-sm rounded-pill px-3 font-weight-bold shadow-sm" onclick="abrirAprobar(${c.id_propuesta}, ${c.cantidad_meta})">
-                                        Aprobar Campaña
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
+            // Acciones
+            const acciones = !esPropuesta
+                ? `<a href="detalles_reforestacion.html?id=${c.id_reforestacion}" 
+                      class="btn btn-sm btn-outline-secondary rounded-circle mr-1" title="Ver detalles">
+                       <i class="fas fa-eye"></i>
+                   </a>`
+                : '';
+
+            const btnAprobar = esPropuesta && user && user.id_rol === 1
+                ? `<button class="btn btn-sm btn-outline-primary rounded-circle" 
+                           onclick="abrirAprobar(${c.id_propuesta}, ${c.cantidad_meta})" 
+                           title="Aprobar">
+                       <i class="fas fa-check"></i>
+                   </button>`
+                : '';
+
+            return `
+            <tr>
+                <td class="font-weight-bold text-muted">${c.id_propuesta}</td>
+                <td>
+                    <a href="${!esPropuesta ? `detalles_reforestacion.html?id=${c.id_reforestacion}` : '#'}" 
+                       class="font-weight-bold text-utm text-decoration-none">
+                        ${c.nombre_propuesta}
+                    </a>
+                </td>
+                <td>${c.nombre_zona || '<span class="text-muted">Sin asignar</span>'}</td>
+                <td>${fecha}</td>
+                <td>
+                    <div class="progress mb-1" style="height:10px; min-width:100px;">
+                        <div class="progress-bar bg-success" style="width:${pct}%"></div>
                     </div>
-                </div>
-            `;
-        });
-    } catch (err) { console.error("Error al cargar campañas:", err); }
+                    <small class="text-muted">${plantados} de ${meta} árboles</small>
+                </td>
+                <td>${badgePropuesta}${badgeEstado}</td>
+                <td>${acciones}${btnAprobar}</td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) { 
+        console.error("Error al cargar campañas:", err);
+        contenedor.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">
+            Error al cargar campañas.
+        </td></tr>`;
+    }
 }
 
 window.abrirAprobar = async (id, meta) => {
     document.getElementById('aprobar-id').value = id;
     document.getElementById('aprobar-meta-temp').value = meta;
-
     try {
         const res = await fetch('/api/sitios');
         const sitios = await res.json();

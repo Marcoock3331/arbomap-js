@@ -196,6 +196,29 @@ app.post('/api/reforestacion/aprobar', async (req, res) => {
     }
 });
 
+// ← ESTA RUTA FALTABA
+app.get('/api/reforestacion', async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                p.id_propuesta,
+                p.nombre_propuesta,
+                p.cantidad_meta,
+                p.estatus,
+                r.id_reforestacion,
+                r.fecha_evento,
+                r.cantidad_plantada,
+                r.estado,
+                s.nombre_zona
+            FROM propuesta_reforestacion p
+            LEFT JOIN reforestacion r ON r.id_propuesta = p.id_propuesta
+            LEFT JOIN sitio s         ON s.id_sitio = r.id_sitio
+            ORDER BY p.id_propuesta DESC
+        `);
+        res.json(rows);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.listen(PORT, () => {
     console.log("---------------------------------------");
     console.log("Servidor ArboMap ejecutandose correctamente");

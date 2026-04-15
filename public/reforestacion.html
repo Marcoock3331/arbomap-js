@@ -21,6 +21,9 @@
         .progress { height: 10px; border-radius: 5px; background-color: #eaecf4; }
         .btn-success-utm { background-color: #009688; border: none; }
         .btn-success-utm:hover { background-color: #00796b; }
+
+        /* Estilo nuevo solicitado */
+        .text-utm { color: #009688 !important; }
     </style>
 </head>
 
@@ -45,12 +48,38 @@
                         </button>
                     </div>
 
-                    <div class="row" id="contenedor-campanas">
-                        <div class="col-12 text-center py-5">
-                            <i class="fas fa-spinner fa-spin fa-3x text-gray-300"></i>
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+                                <h6 class="m-0 font-weight-bold text-utm">
+                                    <i class="fas fa-list mr-2"></i>Campañas y Propuestas
+                                </h6>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="small text-uppercase text-muted">ID</th>
+                                            <th class="small text-uppercase text-muted">Nombre de la Campaña</th>
+                                            <th class="small text-uppercase text-muted">Zona / Sitio</th>
+                                            <th class="small text-uppercase text-muted">Fecha Programada</th>
+                                            <th class="small text-uppercase text-muted">Progreso / Meta</th>
+                                            <th class="small text-uppercase text-muted">Estado</th>
+                                            <th class="small text-uppercase text-muted">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contenedor-campanas">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    </div>
             </div>
         </div>
     </div>
