@@ -1,9 +1,7 @@
-// UBICACION: public/js/mapa-logic.js
 document.addEventListener('DOMContentLoaded', async () => {
     const mapContainer = document.getElementById('map');
-    if (!mapContainer) return; // Evita errores si no existe el div
+    if (!mapContainer) return;
 
-    // 1. Carga de Sidebar
     const sidebarContainer = document.getElementById('sidebar-container');
     const cachedSidebar = sessionStorage.getItem('sidebarHTML');
     if (cachedSidebar) {
@@ -16,19 +14,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     document.body.classList.add('listo');
 
-    // 2. Inicializar Mapa
     const map = L.map('map').setView([19.7267, -101.1619], 17);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const icon = L.divIcon({
-        html: '<i class="fas fa-tree" style="color: #2e7d32; font-size: 28px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></i>',
-        className: 'custom-tree', iconSize: [28, 28], iconAnchor: [14, 28]
+        html: '<i class="fas fa-tree" style="color: #2e7d32; font-size: 18px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></i>',
+        className: 'custom-tree', iconSize: [10, 10], iconAnchor: [12, 18]
     });
 
-    // 3. Cargar Datos
     try {
-        const resZonas = await fetch('/api/sitios');
-        const zonas = await resZonas.json();
+        const zonas = await ApiService.get('/sites');
         zonas.forEach(z => {
             if (z.coordenadas_poligono) {
                 const layer = L.geoJSON(JSON.parse(z.coordenadas_poligono), { 
@@ -38,8 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        const resArboles = await fetch('/api/dashboard-stats');
-        const data = await resArboles.json();
+        const data = await ApiService.get('/trees/stats');
         data.arboles.forEach(a => {
             const m = L.marker([a.latitud, a.longitud], { icon }).addTo(map);
             m.on('click', (e) => { 

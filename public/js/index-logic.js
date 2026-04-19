@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // 2. Traer estadísticas de la BD (Node.js API)
-        const responseStats = await fetch('/api/dashboard-stats');
+        const responseStats = await fetch('/api/trees/stats')
         const dataStats = await responseStats.json();
 
         // 3. Llenar Tarjetas Superiores
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }).addTo(map);
 
             // 7. Dibujar Zonas (Polígonos verdes transparentes)
-            const responseSitios = await fetch('/api/sitios');
+            const responseSitios = await fetch('/api/sites');
             const sitios = await responseSitios.json();
 
             sitios.forEach(sitio => {

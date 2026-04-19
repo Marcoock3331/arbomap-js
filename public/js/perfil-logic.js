@@ -1,5 +1,3 @@
-// UBICACION: public/js/perfil-logic.js
-
 document.addEventListener('DOMContentLoaded', async () => {
     const sidebarContainer = document.getElementById('sidebar-container');
     const mostrarPagina = () => document.body.classList.add('listo');
@@ -28,17 +26,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function cargarDatosPerfil(user) {
     try {
-        const res = await fetch(`/api/perfil/${user.id_usuario}`);
-        const data = await res.json();
-        if (data.error) return alert("Error al cargar el perfil");
-
+        const data = await ApiService.get(`/users/${user.id_usuario}/profile`);
         const info = data.usuario;
         const arboles = data.arboles;
 
         let partesNombre = info.nombre_completo.trim().split(' ');
         let iniciales = partesNombre[0].charAt(0).toUpperCase();
         if (partesNombre.length > 1) iniciales += partesNombre[1].charAt(0).toUpperCase();
-
+        
         document.getElementById('topbar-name').innerText = partesNombre[0];
         document.getElementById('topbar-initials').innerText = iniciales;
         document.getElementById('perfil-iniciales').innerText = iniciales;
@@ -49,12 +44,12 @@ async function cargarDatosPerfil(user) {
 
         const contenedor = document.getElementById('contenedor-arboles');
         contenedor.innerHTML = '';
-
+        
         if (arboles.length === 0) {
             contenedor.innerHTML = `
                 <div class="col-12 text-center py-5">
                     <div class="text-muted mb-3"><i class="fas fa-leaf fa-3x opacity-50"></i></div>
-                    <h5 class="font-weight-bold text-gray-700">Aun no has apadrinado ningun arbol</h5>
+                    <h5 class="font-weight-bold text-gray-700">Aún no has apadrinado ningún árbol</h5>
                     <a href="inventario.html" class="btn btn-success rounded-pill px-4 mt-2">Ir al Inventario</a>
                 </div>`;
             return;
@@ -88,5 +83,8 @@ async function cargarDatosPerfil(user) {
                     </div>
                 </div>`;
         });
-    } catch (e) { console.error("Error cargando perfil:", e); }
+    } catch (e) { 
+        console.error("Error cargando perfil:", e); 
+        alert("Error al cargar el perfil");
+    }
 }

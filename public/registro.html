@@ -7,7 +7,7 @@
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
-    <script src="js/auth-guard.js"></script>
+    <script src="js/api-service.js"></script>
     <style>
         body { background-color: #00897b; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
         .card-auth { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 40px; }
@@ -54,6 +54,11 @@
     </div>
 
     <script>
+        // AUTO-UPPERCASE EN TIEMPO REAL
+        document.getElementById('matricula').addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+
         document.getElementById('formRegistro').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -67,19 +72,14 @@
             const form = document.getElementById('formRegistro');
 
             try {
-                const res = await fetch('/api/registro', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                const result = await res.json();
-
+                const result = await ApiService.post('/auth/register', data);
                 if (result.success) {
                     form.style.display = 'none';
                     errDiv.style.display = 'none';
                     successDiv.style.display = 'block';
-                } else {
-                    errDiv.innerText = result.message;
-                    errDiv.style.display = 'block';
                 }
             } catch (err) {
-                errDiv.innerText = "Error de conexion.";
+                errDiv.innerText = err.message || "Error de conexión.";
                 errDiv.style.display = 'block';
             }
         });

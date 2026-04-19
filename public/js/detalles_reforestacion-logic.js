@@ -1,7 +1,4 @@
-// UBICACIÓN: public/js/detalles_reforestacion-logic.js
-
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. CARGA DE SIDEBAR (Seguro Anti-Pantallazos)
     const sidebarContainer = document.getElementById('sidebar-container');
     const mostrarPagina = () => document.body.classList.add('listo');
     
@@ -20,10 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error("Error sidebar:", err);
     } finally {
-        setTimeout(mostrarPagina, 100); // Fuerza a mostrar la página siempre
+        setTimeout(mostrarPagina, 100); 
     }
 
-    // 2. Obtener ID de la URL
     const idCampana = new URLSearchParams(window.location.search).get('id');
     if (!idCampana) return window.location.href = "reforestacion.html";
 
@@ -32,28 +28,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function cargarDetallesCampana(id) {
     try {
-        const res = await fetch(`/api/reforestacion/detalles/${id}`);
-        
-        // Si el servidor Node.js marca error (ej. campaña no existe)
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Error interno del servidor.');
-        }
-        
-        const data = await res.json();
+        const data = await ApiService.get(`/campaigns/${id}`);
         const c = data.campana;
         const arboles = data.arboles;
 
-        // ==========================================
-        // FUNCIÓN PROTECTORA DE INYECCIÓN
-        // ==========================================
-        // Evita que el JS choque si algún ID del HTML no se encuentra
         const setEl = (idElemento, contenido) => {
             const el = document.getElementById(idElemento);
             if(el) el.innerHTML = contenido;
         };
 
-        // 1. Inyectar Textos Generales
         setEl('det-nombre-campana', c.nombre_propuesta);
         setEl('det-zona', c.nombre_zona || 'Sin zona asignada');
 
@@ -64,23 +47,21 @@ async function cargarDetallesCampana(id) {
             fechaTxt = `${f.getDate().toString().padStart(2,'0')}/${(f.getMonth()+1).toString().padStart(2,'0')}/${f.getFullYear()}`;
         }
         setEl('det-fecha', fechaTxt);
-
+        
         let badgeClass = c.estado === 'Completada' ? 'success' : (c.estado === 'En curso' ? 'info' : 'warning');
         setEl('det-estado', `<span class="badge badge-${badgeClass} px-2 py-1 shadow-sm">${c.estado}</span>`);
 
-        // 2. Inyectar Barra de Progreso
         let plantados = c.cantidad_plantada || 0;
-        let meta = c.cantidad_esperada || 1;
-        let pct = Math.round((plantados / meta) * 100); // Porcentaje real
+        let meta = c.cantidad_meta || c.cantidad_esperada || 1;
+        let pct = Math.round((plantados / meta) * 100);
 
         setEl('det-progreso-texto', `${plantados} / ${meta} Árboles`);
         setEl('det-progreso-pct', `${pct}% Completado`);
         setEl('badge-total-arboles', `${arboles.length} Árbol(es)`);
         
         const barra = document.getElementById('det-progreso-barra');
-        if(barra) barra.style.width = `${Math.min(pct, 100)}%`; // Evita que la barra se desborde visualmente si pasa del 100%
+        if(barra) barra.style.width = `${Math.min(pct, 100)}%`;
 
-        // 3. Inyectar Tabla de Árboles
         const tbody = document.getElementById('tbody-arboles-campana');
         if(!tbody) return; 
         
@@ -120,9 +101,7 @@ async function cargarDetallesCampana(id) {
         });
 
     } catch (error) {
-        // SI ALGO FALLA, LO MOSTRAMOS EN PANTALLA EN LUGAR DE CONGELARSE
         console.error("Error crítico capturado:", error);
-        
         const titulo = document.getElementById('det-nombre-campana');
         if(titulo) titulo.innerText = 'Error de Carga';
         
@@ -131,7 +110,7 @@ async function cargarDetallesCampana(id) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-5">
-                        <div class="text-danger font-weight-bold mb-2"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error en la conexión o base de datos.</div>
+                        <div class="text-danger font-weight-bold mb-2"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error en la conexión.</div>
                         <code class="text-muted">${error.message}</code>
                     </td>
                 </tr>`;

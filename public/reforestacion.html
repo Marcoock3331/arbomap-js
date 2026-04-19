@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     
-    <script src="js/auth-guard.js"></script>
+    <script src="js/api-service.js"></script>
 
     <style>
         body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
@@ -17,12 +17,9 @@
         .topbar-utm { background-color: #009688; }
         #sidebar-container { background-color: #1A252F; display: flex; }
         .card-campana { border-radius: 12px; border: none; border-left: 5px solid #009688; transition: 0.3s; }
-        .card-campana:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
         .progress { height: 10px; border-radius: 5px; background-color: #eaecf4; }
         .btn-success-utm { background-color: #009688; border: none; }
         .btn-success-utm:hover { background-color: #00796b; }
-
-        /* Estilo nuevo solicitado */
         .text-utm { color: #009688 !important; }
     </style>
 </head>
@@ -48,29 +45,28 @@
                         </button>
                     </div>
 
-                    <div class="card shadow-sm mb-4">
+                    <div class="card shadow-sm mb-4" style="border-radius: 12px; border: none;">
                         <div class="card-body p-0">
                             <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
                                 <h6 class="m-0 font-weight-bold text-utm">
-                                    <i class="fas fa-list mr-2"></i>Campañas y Propuestas
+                                    <i class="fas fa-list mr-2"></i>Listado de Campañas
                                 </h6>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
-                                    <thead class="thead-light">
+                                    <thead class="bg-light">
                                         <tr>
-                                            <th class="small text-uppercase text-muted">ID</th>
-                                            <th class="small text-uppercase text-muted">Nombre de la Campaña</th>
-                                            <th class="small text-uppercase text-muted">Zona / Sitio</th>
-                                            <th class="small text-uppercase text-muted">Fecha Programada</th>
-                                            <th class="small text-uppercase text-muted">Progreso / Meta</th>
-                                            <th class="small text-uppercase text-muted">Estado</th>
-                                            <th class="small text-uppercase text-muted">Acciones</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">ID</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Campaña</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Zona / Sitio</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Progreso</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Estado</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0 text-center">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="contenedor-campanas">
                                         <tr>
-                                            <td colspan="7" class="text-center py-4">
+                                            <td colspan="6" class="text-center py-4">
                                                 <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
                                             </td>
                                         </tr>
@@ -79,7 +75,7 @@
                             </div>
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -89,23 +85,21 @@
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
                 <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
                     <h5 class="modal-title font-weight-bold">Proponer Reforestación</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <form id="formPropuesta">
                     <div class="modal-body p-4">
                         <div class="form-group">
                             <label class="small font-weight-bold text-gray-700">Nombre de la Propuesta</label>
-                            <input type="text" name="nombre_propuesta" class="form-control rounded-pill border-light bg-light" placeholder="Ej. Pulmón Edificio I" required>
+                            <input type="text" name="nombre_propuesta" class="form-control rounded-pill border-light bg-light" required>
                         </div>
                         <div class="form-group">
                             <label class="small font-weight-bold text-gray-700">Cantidad de Árboles (Meta)</label>
-                            <input type="number" name="cantidad_meta" class="form-control rounded-pill border-light bg-light" placeholder="Ej. 10" required>
+                            <input type="number" name="cantidad_meta" class="form-control rounded-pill border-light bg-light" required>
                         </div>
                     </div>
                     <div class="modal-footer border-0 d-flex justify-content-center pb-4">
-                        <button type="submit" class="btn btn-success rounded-pill px-5 font-weight-bold shadow-sm" style="background-color: #009688;">Enviar para Aprobación</button>
+                        <button type="submit" class="btn btn-success-utm rounded-pill px-5 font-weight-bold shadow-sm">Enviar Propuesta</button>
                     </div>
                 </form>
             </div>
@@ -114,25 +108,60 @@
 
     <div class="modal fade" id="modalAprobar" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-primary text-white" style="border-radius: 15px 15px 0 0;">
                     <h5 class="modal-title font-weight-bold">Aprobar y Activar Campaña</h5>
                 </div>
                 <form id="formAprobar">
                     <input type="hidden" name="id_propuesta" id="aprobar-id">
-                    <input type="hidden" name="cantidad_esperada" id="aprobar-meta-temp">
-                    <div class="modal-body">
+                    <input type="hidden" name="cantidad_esperada" id="aprobar-meta">
+                    <div class="modal-body p-4">
                         <div class="form-group">
                             <label class="small font-weight-bold">Asignar Zona / Sitio</label>
-                            <select name="id_sitio" id="select-sitios" class="form-control" required></select>
+                            <select name="id_sitio" id="select-sitios" class="form-control rounded-pill" required></select>
                         </div>
                         <div class="form-group">
                             <label class="small font-weight-bold">Fecha Programada</label>
-                            <input type="date" name="fecha_evento" class="form-control" required>
+                            <input type="date" name="fecha_evento" class="form-control rounded-pill" required>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary btn-block rounded-pill">Activar Campaña</button>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 font-weight-bold shadow-sm">Activar Campaña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarCampana" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Campaña</h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="formEditarCampana">
+                    <input type="hidden" id="edit-id">
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Nombre de la Campaña</label>
+                            <input type="text" name="nombre_propuesta" id="edit-nombre" class="form-control rounded-pill bg-light border-0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Meta de Árboles</label>
+                            <input type="number" name="cantidad_meta" id="edit-meta" class="form-control rounded-pill bg-light border-0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Zona</label>
+                            <select name="id_sitio" id="edit-sitio" class="form-control rounded-pill bg-light border-0" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Fecha</label>
+                            <input type="date" name="fecha_evento" id="edit-fecha" class="form-control rounded-pill bg-light border-0">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-warning font-weight-bold text-dark rounded-pill px-5 shadow-sm">Guardar Cambios</button>
                     </div>
                 </form>
             </div>

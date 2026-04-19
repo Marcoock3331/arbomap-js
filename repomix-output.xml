@@ -1,0 +1,2932 @@
+<directory_structure>
+public/components/sidebar.html
+public/detalles_arbol.html
+public/detalles_reforestacion.html
+public/index.html
+public/inventario.html
+public/js/auth-guard.js
+public/js/dashboard-logic.js
+public/js/detalles_arbol-logic.js
+public/js/detalles_reforestacion-logic.js
+public/js/index-logic.js
+public/js/inventario-logic.js
+public/js/mapa-logic.js
+public/js/perfil-logic.js
+public/js/reforestacion-logic.js
+public/js/sb-admin-2.js
+public/js/sb-admin-2.min.js
+public/login.html
+public/mapa.html
+public/perfil.html
+public/reforestacion.html
+public/registro.html
+server.js
+src/config/db.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="public/detalles_arbol.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expediente Clínico - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1a252f; display: flex; }
+        .timeline-item { border-left: 3px solid #e3e6f0; padding-left: 20px; position: relative; }
+        .timeline-item::before {
+            content: ''; position: absolute; width: 15px; height: 15px;
+            background: white; border: 3px solid #009688; border-radius: 50%;
+            left: -9px; top: 0;
+        }
+        #mini-mapa { height: 180px; border-radius: 10px; width: 100%; }
+        .ficha-tecnica { border-top: 5px solid #009688; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">
+                        <i class="fas fa-notes-medical mr-2"></i>Expediente Clínico
+                    </h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="mb-4">
+                        <a href="inventario.html" class="btn btn-sm btn-light border shadow-sm rounded-pill px-3">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver al Inventario
+                        </a>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow-sm mb-4 ficha-tecnica">
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        <i class="fas fa-tree fa-3x text-gray-200 mb-2"></i>
+                                        <h3 class="font-weight-bold text-dark mb-0" id="det-nombre-comun">Cargando...</h3>
+                                        <p class="text-gray-500 font-italic" id="det-nombre-cientifico">---</p>
+                                        <span class="badge badge-light border px-3 py-2 text-dark font-weight-bold">
+                                            <i class="fas fa-tag mr-1 text-info"></i> <span id="det-codigo">---</span>
+                                        </span>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="mb-4 text-center" id="seccion-padrino">
+                                        <h6 class="font-weight-bold text-success text-uppercase small">Padrino Asignado</h6>
+                                        <div class="d-flex align-items-center justify-content-center mt-2">
+                                            <div class="avatar-sm bg-light rounded-circle border p-2 mr-2">
+                                                <i class="fas fa-user-check text-success"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <div class="font-weight-bold text-dark" id="det-cuidador">Sin asignar</div>
+                                                <div class="small text-muted" id="det-fecha-adopcion">---</div>
+                                            </div>
+                                        </div>
+                                        <div id="area-adopcion" class="mt-3"></div>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="mb-3">
+                                        <p class="small text-muted mb-1"><i class="fas fa-map-marker-alt mr-1"></i> <strong>Zona:</strong></p>
+                                        <p class="text-dark" id="det-zona">---</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p class="small text-muted mb-1"><i class="fas fa-calendar-alt mr-1"></i> <strong>Plantado el:</strong></p>
+                                        <p class="text-dark" id="det-fecha">---</p>
+                                    </div>
+                                    <div class="mb-4">
+                                        <p class="small text-muted mb-1"><i class="fas fa-crosshairs mr-1"></i> <strong>Coordenadas:</strong></p>
+                                        <p class="small text-gray-700" id="det-coords">---</p>
+                                        <div id="mini-mapa" class="border shadow-sm"></div>
+                                    </div>
+
+                                    <div class="bg-light p-3 rounded">
+                                        <h6 class="font-weight-bold text-dark small">Descripción de la Especie:</h6>
+                                        <p class="small text-muted mb-0" id="det-descripcion">---</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                                    <h5 class="m-0 font-weight-bold text-success">
+                                        <i class="fas fa-history mr-2"></i>Historial de Reportes
+                                    </h5>
+                                    <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" data-toggle="modal" data-target="#modalSeguimiento">
+                                        <i class="fas fa-plus mr-1"></i> Nuevo Reporte
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="contenedor-historial">
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-spinner fa-spin fa-2x text-gray-300"></i>
+                                            <p class="mt-2 text-muted">Cargando registros médicos...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSeguimiento" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold">Nuevo Reporte de Salud</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formSeguimiento">
+                    <div class="modal-body">
+                        <input type="hidden" name="id_arbol" id="inputIDArbolModal">
+                        
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Estado General</label>
+                            <select name="estado_salud" class="form-control" required>
+                                <option value="Bueno">Bueno (Saludable)</option>
+                                <option value="Regular">Regular (Requiere atención)</option>
+                                <option value="Malo">Malo (Estado Crítico)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Foto de Evidencia</label>
+                            <input type="file" name="foto" class="form-control-file border p-1 rounded" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Observaciones / Tratamiento</label>
+                            <textarea name="comentarios" class="form-control" rows="4" placeholder="Describe cómo se encuentra el árbol..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary rounded-pill" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4">Guardar Reporte</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarReporte" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title font-weight-bold">Editar Observación Médica</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formEditarReporte">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-rep-id">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-dark">Estado de Salud</label>
+                            <select id="edit-rep-estado" class="form-control">
+                                <option value="Bueno">Bueno</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Malo">Malo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-dark">Comentarios Actualizados</label>
+                            <textarea id="edit-rep-comentarios" class="form-control" rows="4" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" class="btn btn-warning font-weight-bold rounded-pill px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/detalles_arbol-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="public/detalles_reforestacion.html">
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Detalles de Reforestación - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1A252F; display: flex; } /* Sidebar Azul Noche */
+        .table-custom th { border-top: none !important; border-bottom: 2px solid #e3e6f0 !important; color: #6e707e; font-size: 0.85rem; }
+        .table-custom td { vertical-align: middle !important; }
+    </style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars text-white"></i></button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Detalles de la Reforestación</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <a href="reforestacion.html" class="btn btn-sm btn-white border shadow-sm font-weight-bold mb-4 rounded-pill px-3">
+                        <i class="fas fa-arrow-left mr-1"></i> Volver a Campañas
+                    </a>
+
+                    <div class="card shadow-sm border-0 mb-4" style="border-top: 4px solid #009688;">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h3 id="det-nombre-campana" class="font-weight-bold text-gray-800 mb-2">Cargando datos...</h3>
+                                    <div class="d-flex text-muted small font-weight-bold">
+                                        <div class="mr-4"><i class="fas fa-map-marker-alt text-danger mr-1"></i> <span id="det-zona">---</span></div>
+                                        <div class="mr-4"><i class="fas fa-calendar-alt text-primary mr-1"></i> <span id="det-fecha">---</span></div>
+                                        <div><i class="fas fa-info-circle text-info mr-1"></i> Estado: <span id="det-estado">---</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-right mt-3 mt-md-0 border-left">
+                                    <div class="font-weight-bold text-gray-700 mb-1" id="det-progreso-texto">0 / 0 Árboles</div>
+                                    <div class="progress shadow-sm mb-1" style="height: 12px; border-radius: 6px;">
+                                        <div id="det-progreso-barra" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-success font-weight-bold" id="det-progreso-pct">0% Completado</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                            <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-leaf mr-2"></i>Árboles Registrados en esta Campaña</h6>
+                            <span class="badge badge-light border text-gray-700 px-3 py-2 shadow-sm rounded-pill" id="badge-total-arboles">0 árboles</span>
+                        </div>
+                        <div class="card-body pt-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-custom">
+                                    <thead class="bg-light font-weight-bold text-uppercase text-gray-600 border-top">
+                                        <tr>
+                                            <th class="pl-3">ID</th>
+                                            <th>Código / Etiqueta</th>
+                                            <th>Especie Plantada</th>
+                                            <th class="text-center">Fecha Registro</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-arboles-campana">
+                                        <tr><td colspan="6" class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin mr-2 fa-2x"></i></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/detalles_reforestacion-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="public/js/auth-guard.js">
+// UBICACION: public/js/auth-guard.js
+(function() {
+    const userStr = sessionStorage.getItem('user');
+    const path = window.location.pathname;
+
+    if (!userStr && !path.includes('login.html') && !path.includes('registro.html')) {
+        window.location.replace('login.html');
+        return;
+    }
+    if (userStr && (path.includes('login.html') || path.includes('registro.html'))) {
+        window.location.replace('index.html');
+        return;
+    }
+
+    function inyectarPerfil() {
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        const nav = document.querySelector('.topbar');
+        
+        if (nav && !document.getElementById('user-badge-global')) {
+            let partes = user.nombre_completo.split(' ');
+            let iniciales = partes[0][0] + (partes[1] ? partes[1][0] : '');
+            
+            const badge = document.createElement('ul');
+            badge.className = 'navbar-nav ml-auto';
+            badge.id = 'user-badge-global';
+            badge.innerHTML = `
+                <li class="nav-item d-flex align-items-center pr-3">
+                    <span class="mr-2 d-none d-sm-inline text-white font-weight-bold">${partes[0]}</span>
+                    <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm font-weight-bold" style="width: 38px; height: 38px;">
+                        ${iniciales.toUpperCase()}
+                    </div>
+                </li>`;
+            nav.appendChild(badge);
+
+            // SEGURIDAD DE ROLES: Ocultar botones si id_rol !== 1 (Admin)
+            if (user.id_rol !== 1) {
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    .btn-outline-danger, .btn-outline-warning, .btn-eliminar, .btn-editar,
+                    [onclick*="eliminar"], [onclick*="abrirModalEditar"], #btn-agregar-arbol { 
+                        display: none !important; 
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', inyectarPerfil); }
+    else { inyectarPerfil(); }
+    setTimeout(inyectarPerfil, 500);
+})();
+
+window.cerrarSesion = (e) => { 
+    if(e) e.preventDefault(); 
+    sessionStorage.clear(); 
+    window.location.replace('login.html'); 
+};
+</file>
+
+<file path="public/js/detalles_arbol-logic.js">
+let miniMapa;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const mostrarPagina = () => document.body.classList.add('listo');
+
+    try {
+        const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+        if (cachedSidebar) {
+            sidebarContainer.innerHTML = cachedSidebar;
+        } else {
+            const res = await fetch('components/sidebar.html');
+            if (res.ok) {
+                const html = await res.text();
+                sessionStorage.setItem('sidebarHTML', html);
+                sidebarContainer.innerHTML = html;
+            }
+        }
+    } catch (err) {
+        console.error("Error cargando sidebar:", err);
+    } finally {
+        setTimeout(mostrarPagina, 100);
+    }
+
+    const etiqueta = new URLSearchParams(window.location.search).get('id');
+    if (!etiqueta) return window.location.href = "inventario.html";
+
+    const inputIDArbolModal = document.getElementById('inputIDArbolModal');
+    if (inputIDArbolModal) inputIDArbolModal.value = etiqueta;
+
+    cargarExpediente(etiqueta);
+
+    const formSeguimiento = document.getElementById('formSeguimiento');
+    if (formSeguimiento) {
+        formSeguimiento.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = this.querySelector('button[type="submit"]');
+            const txt = btn.innerHTML;
+            btn.innerHTML = 'Guardando...';
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData(this);
+                const sessionData = JSON.parse(sessionStorage.getItem('user'));
+                if (sessionData) formData.append('id_usuario', sessionData.id_usuario);
+
+                const res = await fetch('/api/seguimiento', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    $('#modalSeguimiento').modal('hide');
+                    this.reset();
+                    cargarExpediente(etiqueta);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = txt;
+                btn.disabled = false;
+            }
+        });
+    }
+
+    const formEditarReporte = document.getElementById('formEditarReporte');
+    if (formEditarReporte) {
+        formEditarReporte.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = this.querySelector('button[type="submit"]');
+            const txt = btn.innerHTML;
+            btn.innerHTML = 'Actualizando...';
+            btn.disabled = true;
+
+            const id = document.getElementById('edit-rep-id').value;
+
+            const data = {
+                estado_salud: document.getElementById('edit-rep-estado').value,
+                comentarios: document.getElementById('edit-rep-comentarios').value
+            };
+
+            try {
+                const res = await fetch(`/api/seguimiento/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    $('#modalEditarReporte').modal('hide');
+                    cargarExpediente(etiqueta);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = txt;
+                btn.disabled = false;
+            }
+        });
+    }
+});
+
+async function cargarExpediente(codigo) {
+    try {
+        const res = await fetch(`/api/arbol/expediente/${codigo}`);
+        if (!res.ok) throw new Error("Arbol no encontrado");
+
+        const data = await res.json();
+
+        const a = data.arbol;
+        const reportes = data.historial; // corregido
+
+        document.getElementById('det-nombre-comun').innerText = a.nombre_comun;
+        document.getElementById('det-nombre-cientifico').innerText = a.nombre_cientifico || 'Sin registro';
+        document.getElementById('det-descripcion').innerText = a.descripcion || 'Sin descripcion';
+        document.getElementById('det-codigo').innerText = a.codigo_etiqueta;
+        document.getElementById('det-zona').innerHTML = `<strong>${a.nombre_zona || 'Sin zona'}</strong>`;
+
+        let fPlantado = new Date(a.fecha_plantado);
+        fPlantado.setMinutes(fPlantado.getMinutes() + fPlantado.getTimezoneOffset());
+        document.getElementById('det-fecha').innerText = fPlantado.toLocaleDateString();
+
+        document.getElementById('det-coords').innerText = `Lat: ${a.latitud} | Lng: ${a.longitud}`;
+
+        if (!miniMapa) {
+            miniMapa = L.map('mini-mapa', { zoomControl: false })
+                .setView([a.latitud, a.longitud], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+                .addTo(miniMapa);
+        } else {
+            miniMapa.setView([a.latitud, a.longitud], 18);
+        }
+
+        miniMapa.eachLayer(layer => {
+            if (layer instanceof L.Marker) miniMapa.removeLayer(layer);
+        });
+
+        L.marker([a.latitud, a.longitud]).addTo(miniMapa);
+
+        const contenedor = document.getElementById('contenedor-historial');
+
+        if (contenedor) {
+            contenedor.innerHTML = '';
+
+            if (!reportes || reportes.length === 0) {
+                contenedor.innerHTML = '<p class="text-center text-muted py-5">Sin registros</p>';
+                return;
+            }
+
+            reportes.forEach((r) => {
+                const badge = r.estado_salud === 'Bueno' ? 'success' :
+                    (r.estado_salud === 'Regular' ? 'warning' : 'danger');
+
+                const foto = r.foto_url ? `/uploads/${r.foto_url}` : '';
+
+                let fRevision = new Date(r.fecha_revision);
+                fRevision.setMinutes(fRevision.getMinutes() + fRevision.getTimezoneOffset());
+
+                contenedor.innerHTML += `
+                    <div class="mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between">
+                            <strong>${fRevision.toLocaleDateString()}</strong>
+                            <span class="badge badge-${badge}">${r.estado_salud}</span>
+                        </div>
+                        <p>${r.comentarios || ''}</p>
+                        ${foto ? `<img src="${foto}" style="max-width:100%;">` : ''}
+                    </div>
+                `;
+            });
+        }
+
+    } catch (e) {
+        console.error("Error al cargar expediente:", e);
+    }
+}
+</file>
+
+<file path="public/js/detalles_reforestacion-logic.js">
+// UBICACIÓN: public/js/detalles_reforestacion-logic.js
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. CARGA DE SIDEBAR (Seguro Anti-Pantallazos)
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const mostrarPagina = () => document.body.classList.add('listo');
+    
+    try {
+        const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+        if (cachedSidebar) {
+            sidebarContainer.innerHTML = cachedSidebar;
+        } else {
+            const res = await fetch('components/sidebar.html');
+            if(res.ok) {
+                const html = await res.text();
+                sessionStorage.setItem('sidebarHTML', html);
+                sidebarContainer.innerHTML = html;
+            }
+        }
+    } catch (err) {
+        console.error("Error sidebar:", err);
+    } finally {
+        setTimeout(mostrarPagina, 100); // Fuerza a mostrar la página siempre
+    }
+
+    // 2. Obtener ID de la URL
+    const idCampana = new URLSearchParams(window.location.search).get('id');
+    if (!idCampana) return window.location.href = "reforestacion.html";
+
+    cargarDetallesCampana(idCampana);
+});
+
+async function cargarDetallesCampana(id) {
+    try {
+        const res = await fetch(`/api/reforestacion/detalles/${id}`);
+        
+        // Si el servidor Node.js marca error (ej. campaña no existe)
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Error interno del servidor.');
+        }
+        
+        const data = await res.json();
+        const c = data.campana;
+        const arboles = data.arboles;
+
+        // ==========================================
+        // FUNCIÓN PROTECTORA DE INYECCIÓN
+        // ==========================================
+        // Evita que el JS choque si algún ID del HTML no se encuentra
+        const setEl = (idElemento, contenido) => {
+            const el = document.getElementById(idElemento);
+            if(el) el.innerHTML = contenido;
+        };
+
+        // 1. Inyectar Textos Generales
+        setEl('det-nombre-campana', c.nombre_propuesta);
+        setEl('det-zona', c.nombre_zona || 'Sin zona asignada');
+
+        let fechaTxt = '- Sin fecha -';
+        if(c.fecha_evento) {
+            let f = new Date(c.fecha_evento);
+            f.setMinutes(f.getMinutes() + f.getTimezoneOffset());
+            fechaTxt = `${f.getDate().toString().padStart(2,'0')}/${(f.getMonth()+1).toString().padStart(2,'0')}/${f.getFullYear()}`;
+        }
+        setEl('det-fecha', fechaTxt);
+
+        let badgeClass = c.estado === 'Completada' ? 'success' : (c.estado === 'En curso' ? 'info' : 'warning');
+        setEl('det-estado', `<span class="badge badge-${badgeClass} px-2 py-1 shadow-sm">${c.estado}</span>`);
+
+        // 2. Inyectar Barra de Progreso
+        let plantados = c.cantidad_plantada || 0;
+        let meta = c.cantidad_esperada || 1;
+        let pct = Math.round((plantados / meta) * 100); // Porcentaje real
+
+        setEl('det-progreso-texto', `${plantados} / ${meta} Árboles`);
+        setEl('det-progreso-pct', `${pct}% Completado`);
+        setEl('badge-total-arboles', `${arboles.length} Árbol(es)`);
+        
+        const barra = document.getElementById('det-progreso-barra');
+        if(barra) barra.style.width = `${Math.min(pct, 100)}%`; // Evita que la barra se desborde visualmente si pasa del 100%
+
+        // 3. Inyectar Tabla de Árboles
+        const tbody = document.getElementById('tbody-arboles-campana');
+        if(!tbody) return; 
+        
+        tbody.innerHTML = '';
+
+        if (arboles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Aún no se han registrado ejemplares bajo esta campaña.</td></tr>';
+            return;
+        }
+
+        arboles.forEach(a => {
+            let estado = a.estado_actual || 'Bueno';
+            let estBadge = estado === 'Bueno' ? 'success' : (estado === 'Regular' ? 'warning' : 'danger');
+
+            let fRegistro = '-';
+            if(a.fecha_plantado) {
+                let f2 = new Date(a.fecha_plantado);
+                f2.setMinutes(f2.getMinutes() + f2.getTimezoneOffset());
+                fRegistro = `${f2.getDate().toString().padStart(2,'0')}/${(f2.getMonth()+1).toString().padStart(2,'0')}/${f2.getFullYear()}`;
+            }
+
+            tbody.innerHTML += `
+                <tr class="border-bottom">
+                    <td class="pl-3 font-weight-bold text-muted align-middle">${a.id_arbol}</td>
+                    <td class="align-middle"><span class="badge badge-light border text-gray-700 shadow-none px-3 py-2"><i class="fas fa-tag mr-1"></i>${a.codigo_etiqueta}</span></td>
+                    <td class="align-middle">
+                        <div class="font-weight-bold text-success" style="font-size: 1.05rem;">${a.nombre_comun}</div>
+                        <div class="small text-muted">${a.nombre_cientifico || 'Sin registro científico'}</div>
+                    </td>
+                    <td class="text-center text-gray-800 font-weight-bold align-middle">${fRegistro}</td>
+                    <td class="text-center align-middle"><span class="badge badge-${estBadge} px-3 py-2 rounded-pill shadow-none">${estado}</span></td>
+                    <td class="text-center align-middle">
+                        <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" class="btn btn-sm btn-outline-info rounded-circle shadow-sm" title="Ver Expediente Clínico"><i class="fas fa-eye"></i></a>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (error) {
+        // SI ALGO FALLA, LO MOSTRAMOS EN PANTALLA EN LUGAR DE CONGELARSE
+        console.error("Error crítico capturado:", error);
+        
+        const titulo = document.getElementById('det-nombre-campana');
+        if(titulo) titulo.innerText = 'Error de Carga';
+        
+        const tbody = document.getElementById('tbody-arboles-campana');
+        if(tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="text-danger font-weight-bold mb-2"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error en la conexión o base de datos.</div>
+                        <code class="text-muted">${error.message}</code>
+                    </td>
+                </tr>`;
+        }
+    }
+}
+</file>
+
+<file path="public/js/perfil-logic.js">
+// UBICACION: public/js/perfil-logic.js
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const mostrarPagina = () => document.body.classList.add('listo');
+    
+    try {
+        const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+        if (cachedSidebar) {
+            sidebarContainer.innerHTML = cachedSidebar;
+        } else {
+            const res = await fetch('components/sidebar.html');
+            if (res.ok) {
+                const html = await res.text();
+                sessionStorage.setItem('sidebarHTML', html); 
+                sidebarContainer.innerHTML = html;
+            }
+        }
+    } catch (err) { console.error(err); }
+    finally { setTimeout(mostrarPagina, 100); }
+
+    const sessionData = sessionStorage.getItem('user');
+    if (!sessionData) { window.location.href = 'login.html'; return; }
+
+    const usuarioActual = JSON.parse(sessionData);
+    cargarDatosPerfil(usuarioActual);
+});
+
+async function cargarDatosPerfil(user) {
+    try {
+        const res = await fetch(`/api/perfil/${user.id_usuario}`);
+        const data = await res.json();
+        if (data.error) return alert("Error al cargar el perfil");
+
+        const info = data.usuario;
+        const arboles = data.arboles;
+
+        let partesNombre = info.nombre_completo.trim().split(' ');
+        let iniciales = partesNombre[0].charAt(0).toUpperCase();
+        if (partesNombre.length > 1) iniciales += partesNombre[1].charAt(0).toUpperCase();
+
+        document.getElementById('topbar-name').innerText = partesNombre[0];
+        document.getElementById('topbar-initials').innerText = iniciales;
+        document.getElementById('perfil-iniciales').innerText = iniciales;
+        document.getElementById('perfil-nombre').innerText = info.nombre_completo;
+        document.getElementById('perfil-matricula').innerText = info.matricula;
+        document.getElementById('perfil-rol').innerText = info.rol;
+        document.getElementById('perfil-conteo').innerText = arboles.length;
+
+        const contenedor = document.getElementById('contenedor-arboles');
+        contenedor.innerHTML = '';
+
+        if (arboles.length === 0) {
+            contenedor.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="text-muted mb-3"><i class="fas fa-leaf fa-3x opacity-50"></i></div>
+                    <h5 class="font-weight-bold text-gray-700">Aun no has apadrinado ningun arbol</h5>
+                    <a href="inventario.html" class="btn btn-success rounded-pill px-4 mt-2">Ir al Inventario</a>
+                </div>`;
+            return;
+        }
+
+        arboles.forEach(a => {
+            let badgeClass = a.estado_actual === 'Bueno' ? 'success' : (a.estado_actual === 'Regular' ? 'warning text-dark' : 'danger');
+            let foto = a.foto ? `/uploads/${a.foto}` : 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png';
+            let fAdopcion = new Date(a.fecha_asignacion);
+            fAdopcion.setMinutes(fAdopcion.getMinutes() + fAdopcion.getTimezoneOffset());
+
+            contenedor.innerHTML += `
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card card-arbol h-100">
+                        <div class="position-relative">
+                            <img src="${foto}" class="img-arbol">
+                            <span class="badge badge-${badgeClass} badge-estado text-uppercase">${a.estado_actual || 'Desconocido'}</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="font-weight-bold text-gray-800 mb-0">${a.nombre_comun}</h5>
+                            <p class="small text-muted font-italic mb-3">${a.nombre_cientifico || 'Sin clasificar'}</p>
+                            <div class="small text-gray-700 mb-1"><i class="fas fa-map-marker-alt text-danger mr-2"></i>${a.nombre_zona || 'Campus General'}</div>
+                            <div class="small text-gray-700 mb-3"><i class="fas fa-tag text-info mr-2"></i>${a.codigo_etiqueta}</div>
+                            <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" class="btn btn-success btn-block rounded-pill font-weight-bold shadow-sm">
+                                <i class="fas fa-stethoscope mr-1"></i> Cuidar / Reportar
+                            </a>
+                        </div>
+                        <div class="card-footer bg-white text-center border-top-0 pt-0">
+                            <small class="text-muted">Adoptado el: ${fAdopcion.toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    } catch (e) { console.error("Error cargando perfil:", e); }
+}
+</file>
+
+<file path="public/js/sb-admin-2.js">
+(function($) {
+  "use strict"; // Start of use strict
+
+  // Toggle the side navigation
+  $("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+    $("body").toggleClass("sidebar-toggled");
+    $(".sidebar").toggleClass("toggled");
+    if ($(".sidebar").hasClass("toggled")) {
+      $('.sidebar .collapse').collapse('hide');
+    };
+  });
+
+  // Close any open menu accordions when window is resized below 768px
+  $(window).resize(function() {
+    if ($(window).width() < 768) {
+      $('.sidebar .collapse').collapse('hide');
+    };
+    
+    // Toggle the side navigation when window is resized below 480px
+    if ($(window).width() < 480 && !$(".sidebar").hasClass("toggled")) {
+      $("body").addClass("sidebar-toggled");
+      $(".sidebar").addClass("toggled");
+      $('.sidebar .collapse').collapse('hide');
+    };
+  });
+
+  // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
+  $('body.fixed-nav .sidebar').on('mousewheel DOMMouseScroll wheel', function(e) {
+    if ($(window).width() > 768) {
+      var e0 = e.originalEvent,
+        delta = e0.wheelDelta || -e0.detail;
+      this.scrollTop += (delta < 0 ? 1 : -1) * 30;
+      e.preventDefault();
+    }
+  });
+
+  // Scroll to top button appear
+  $(document).on('scroll', function() {
+    var scrollDistance = $(this).scrollTop();
+    if (scrollDistance > 100) {
+      $('.scroll-to-top').fadeIn();
+    } else {
+      $('.scroll-to-top').fadeOut();
+    }
+  });
+
+  // Smooth scrolling using jQuery easing
+  $(document).on('click', 'a.scroll-to-top', function(e) {
+    var $anchor = $(this);
+    $('html, body').stop().animate({
+      scrollTop: ($($anchor.attr('href')).offset().top)
+    }, 1000, 'easeInOutExpo');
+    e.preventDefault();
+  });
+
+})(jQuery); // End of use strict
+</file>
+
+<file path="public/js/sb-admin-2.min.js">
+/*!
+ * Start Bootstrap - SB Admin 2 v4.1.3 (https://startbootstrap.com/theme/sb-admin-2)
+ * Copyright 2013-2021 Start Bootstrap
+ * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin-2/blob/master/LICENSE)
+ */
+
+!function(l){"use strict";l("#sidebarToggle, #sidebarToggleTop").on("click",function(e){l("body").toggleClass("sidebar-toggled"),l(".sidebar").toggleClass("toggled"),l(".sidebar").hasClass("toggled")&&l(".sidebar .collapse").collapse("hide")}),l(window).resize(function(){l(window).width()<768&&l(".sidebar .collapse").collapse("hide"),l(window).width()<480&&!l(".sidebar").hasClass("toggled")&&(l("body").addClass("sidebar-toggled"),l(".sidebar").addClass("toggled"),l(".sidebar .collapse").collapse("hide"))}),l("body.fixed-nav .sidebar").on("mousewheel DOMMouseScroll wheel",function(e){var o;768<l(window).width()&&(o=(o=e.originalEvent).wheelDelta||-o.detail,this.scrollTop+=30*(o<0?1:-1),e.preventDefault())}),l(document).on("scroll",function(){100<l(this).scrollTop()?l(".scroll-to-top").fadeIn():l(".scroll-to-top").fadeOut()}),l(document).on("click","a.scroll-to-top",function(e){var o=l(this);l("html, body").stop().animate({scrollTop:l(o.attr("href")).offset().top},1e3,"easeInOutExpo"),e.preventDefault()})}(jQuery);
+</file>
+
+<file path="public/login.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar Sesion - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { background-color: #197a61; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
+        .card-auth { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 40px; }
+        .btn-auth { background-color: #00897b; color: white; border-radius: 8px; font-weight: bold; }
+        .btn-auth:hover { background-color: #00695c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card card-auth bg-white">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-tree fa-3x" style="color: #00897b;"></i>
+                        <h3 class="font-weight-bold text-dark mt-2">ARBOMAP <span style="color: #00897b;">UTM</span></h3>
+                        <p class="text-muted small">Bienvenido, ingresa tu matricula institucional.</p>
+                    </div>
+                    
+                    <form id="formLogin">
+                        <div class="form-group mb-4">
+                            <input type="text" id="matricula" class="form-control form-control-lg border-light bg-light" required placeholder="TU MATRICULA" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-4">
+                            <input type="password" id="password" class="form-control form-control-lg border-light bg-light" required placeholder="Contrasena" style="font-size: 0.9rem;">
+                        </div>
+                        <button type="submit" class="btn btn-auth btn-block py-3 shadow-sm mb-4">Iniciar Sesion</button>
+                    </form>
+                    
+                    <div id="error-msg" class="alert alert-danger text-center small py-2" style="display:none;"></div>
+                    
+                    <div class="text-center mt-2 border-top pt-4">
+                        <a href="registro.html" class="small font-weight-bold text-success text-decoration-none">Eres nuevo? Crea tu cuenta de voluntario!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const matricula = document.getElementById('matricula').value;
+            const password = document.getElementById('password').value;
+            const errDiv = document.getElementById('error-msg');
+
+            try {
+                const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matricula, password }) });
+                const data = await res.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'index.html'; 
+                } else {
+                    errDiv.innerText = data.message;
+                    errDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errDiv.innerText = "Error conectando con el servidor.";
+                errDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+</file>
+
+<file path="public/perfil.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi Perfil - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        .topbar-utm { background-color: #00897b; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+        .bg-perfil { background-color: #1b5e20; border-radius: 15px; }
+        .avatar-circle { width: 100px; height: 100px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #00897b; font-weight: bold; position: relative; }
+        .camera-icon { position: absolute; bottom: 0; right: 0; background: #00897b; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 3px solid white; font-size: 0.8rem; }
+        .card-arbol { transition: transform 0.2s; border: none; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-arbol:hover { transform: translateY(-5px); }
+        .img-arbol { height: 180px; object-fit: cover; width: 100%; }
+        .badge-estado { position: absolute; top: 10px; right: 10px; font-size: 0.85rem; padding: 5px 15px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars text-white"></i></button>
+                        <h1 class="h4 mb-0 text-white font-weight-bold"><i class="fas fa-leaf mr-2"></i> Mi perfil</h1>
+                    </div>
+                    <div class="text-white font-weight-bold d-flex align-items-center">
+                        <span id="topbar-name" class="mr-2">Cargando...</span>
+                        <div id="topbar-initials" class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center font-weight-bold" style="width: 35px; height: 35px; font-size: 0.9rem;">--</div>
+                    </div>
+                </nav>
+
+                <div class="container-fluid px-4">
+                    <div class="bg-perfil text-white p-4 mb-5 shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex align-items-center mb-3 mb-md-0">
+                            <div class="avatar-circle mr-4 shadow">
+                                <span id="perfil-iniciales">--</span>
+                                <div class="camera-icon"><i class="fas fa-camera"></i></div>
+                            </div>
+                            <div>
+                                <h2 id="perfil-nombre" class="font-weight-bold mb-1">Cargando...</h2>
+                                <p class="mb-2" style="font-size: 1.1rem;"><i class="fas fa-id-card mr-2"></i><span id="perfil-matricula">--</span></p>
+                                <span class="badge bg-white text-success px-3 py-1 rounded-pill font-weight-bold"><i class="fas fa-seedling mr-1"></i> <span id="perfil-rol">Voluntario</span></span>
+                            </div>
+                        </div>
+                        <div class="text-right text-center text-md-right">
+                            <div id="perfil-conteo" class="display-3 font-weight-bold" style="line-height: 1;">0</div>
+                            <div style="font-size: 1.1rem; opacity: 0.9;">Arboles Apadrinados</div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-weight-bold text-gray-800 mb-4"><i class="fas fa-tree text-success mr-2"></i> Mi Bosque Asignado</h4>
+                    <div class="row" id="contenedor-arboles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/perfil-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="public/registro.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registro - ARBOMAP UTM</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <style>
+        body { background-color: #00897b; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
+        .card-auth { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 40px; }
+        .btn-auth { background-color: #2e7d32; color: white; border-radius: 8px; font-weight: bold; }
+        .btn-auth:hover { background-color: #1b5e20; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card card-auth bg-white">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-seedling fa-3x text-success"></i>
+                        <h3 class="font-weight-bold text-dark mt-2">Unete a ArboMap <span style="color: #00897b;">UTM</span></h3>
+                        <p class="text-muted small">Ingresa con tu matricula para ser voluntario.</p>
+                    </div>
+
+                    <div id="success-msg" class="alert alert-success text-center small py-3 font-weight-bold" style="display:none;">
+                        Cuenta creada con exito! Ya puedes iniciar sesion.
+                    </div>
+                    
+                    <form id="formRegistro">
+                        <div class="form-group mb-3">
+                            <input type="text" id="nombre" class="form-control form-control-lg border-light bg-light" required placeholder="Nombre Completo" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-3">
+                            <input type="text" id="matricula" class="form-control form-control-lg border-light bg-light" required placeholder="MATRICULA (EJ. UTM241085TI)" style="font-size: 0.9rem;">
+                        </div>
+                        <div class="form-group mb-4">
+                            <input type="password" id="password" class="form-control form-control-lg border-light bg-light" required placeholder="Contrasena" style="font-size: 0.9rem;">
+                        </div>
+                        <button type="submit" class="btn btn-auth btn-block py-3 shadow-sm mb-4">Crear Cuenta</button>
+                    </form>
+                    
+                    <div id="error-msg" class="alert alert-danger text-center small py-2" style="display:none;"></div>
+                    
+                    <div class="text-center mt-2 border-top pt-4">
+                        <a href="login.html" class="small font-weight-bold text-info text-decoration-none">Ya tienes cuenta? Inicia sesion aqui!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formRegistro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                nombre_completo: document.getElementById('nombre').value,
+                matricula: document.getElementById('matricula').value,
+                password: document.getElementById('password').value
+            };
+
+            const errDiv = document.getElementById('error-msg');
+            const successDiv = document.getElementById('success-msg');
+            const form = document.getElementById('formRegistro');
+
+            try {
+                const res = await fetch('/api/registro', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const result = await res.json();
+
+                if (result.success) {
+                    form.style.display = 'none';
+                    errDiv.style.display = 'none';
+                    successDiv.style.display = 'block';
+                } else {
+                    errDiv.innerText = result.message;
+                    errDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errDiv.innerText = "Error de conexion.";
+                errDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+</file>
+
+<file path="src/config/db.js">
+// UBICACIÓN: src/config/db.js
+const mysql = require('mysql2');
+const dotenv = require('dotenv');
+
+// Cargar variables de entorno (por si usas .env)
+dotenv.config();
+
+// Configuración de la conexión
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',           // Usuario por defecto de Laragon
+    password: '',           // Contraseña vacía por defecto
+    database: 'arbomap_v2', // TU BASE DE DATOS REAL
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+// Mensaje de confirmación al conectar
+pool.getConnection((err, connection) => {
+    if (err) {
+        console.error('❌ Error conectando a MySQL:', err.code);
+        if (err.code === 'ER_BAD_DB_ERROR') {
+            console.error('👉 CONSEJO: Verifica que tu base de datos se llame "arbomap_v2" en phpMyAdmin.');
+        }
+    } else {
+        console.log('✅ Conexión exitosa a la Base de Datos: arbomap_v2');
+        if (connection) connection.release();
+    }
+});
+
+// Exportamos la conexión para usarla en el servidor
+module.exports = pool.promise();
+</file>
+
+<file path="public/components/sidebar.html">
+<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" style="background-color: #1A252F;">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center my-3" href="index.html">
+        <div class="sidebar-brand-icon"><i class="fas fa-tree text-success"></i></div>
+        <div class="sidebar-brand-text mx-3">ARBOMAP <sup>UTM</sup></div>
+    </a>
+    <hr class="sidebar-divider my-0">
+    <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Panel General</span></a></li>
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading">GESTIÓN OPERATIVA</div>
+    <li class="nav-item"><a class="nav-link" href="mapa.html"><i class="fas fa-fw fa-map-marker-alt"></i><span>Mapa Interactivo</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="inventario.html"><i class="fas fa-fw fa-seedling"></i><span>Inventario Árboles</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="reforestacion.html"><i class="fas fa-fw fa-calendar-alt"></i><span>Reforestación</span></a></li>
+    <hr class="sidebar-divider">
+    <li class="nav-item"><a class="nav-link" href="perfil.html"><i class="fas fa-fw fa-user"></i><span>Mi Perfil Forestal</span></a></li>
+    <hr class="sidebar-divider d-none d-md-block">
+    <li class="nav-item mt-auto"><a class="nav-link text-danger font-weight-bold" href="#" onclick="cerrarSesion(event)"><i class="fas fa-fw fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
+</ul>
+</file>
+
+<file path="public/index.html">
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Dashboard - ARBOMAP UTM</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9fc;
+        visibility: hidden;
+        opacity: 0;
+      }
+      body.listo {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.1s;
+      }
+      .topbar-utm {
+        background-color: #009688;
+      }
+      .clickable-card {
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .clickable-card:hover {
+        transform: translateY(-3px);
+      }
+      #sidebar-container {
+        background-color: #1a252f;
+        display: flex;
+      }
+    </style>
+  </head>
+  <body id="page-top">
+    <div id="wrapper">
+      <div id="sidebar-container"></div>
+
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <nav class="navbar navbar-expand topbar mb-4 static-top shadow topbar-utm">
+            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+              <i class="fa fa-bars text-white"></i>
+            </button>
+            <h1 class="h4 mb-0 text-white font-weight-bold">
+              Panel General ArboMap
+            </h1>
+          </nav>
+
+          <div class="container-fluid">
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+              <h2 class="h5 mb-0 text-gray-800 font-weight-bold">
+                Estado del Arbolado
+              </h2>
+              <button onclick="generarTicketPDF()" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                <i class="fas fa-receipt mr-1"></i> Imprimir Ticket
+              </button>
+            </div>
+
+            <div id="ticketPDF" style="display: none; background: white; color: black; font-family: 'Courier New', monospace; padding: 25px; max-width: 380px; margin: 0 auto;">
+              <div style="text-align: center">
+                <i class="fas fa-tree" style="font-size: 30px; color: #009688"></i>
+                <h2 style="margin: 5px 0; font-weight: bold">ARBOMAP UTM</h2>
+                <p style="margin: 0; font-size: 12px">UNIVERSIDAD TECNOLÓGICA DE MORELIA</p>
+                <p style="margin: 0; font-size: 12px">INVENTARIO FORESTAL</p>
+              </div>
+              <hr style="border-top: 2px dashed #000; margin: 15px 0" />
+              <div style="font-size: 13px">
+                <p style="margin: 2px 0">FOLIO: <strong id="ticket-folio">---</strong></p>
+                <p style="margin: 2px 0">FECHA EMISIÓN: <strong id="ticket-fecha">---</strong></p>
+              </div>
+              <hr style="border-top: 2px dashed #000; margin: 15px 0" />
+              <table style="width: 100%; font-size: 14px">
+                <tr>
+                  <td><strong>TOTAL ÁRBOLES:</strong></td>
+                  <td style="text-align: right; font-size: 18px; font-weight: bold;" id="ticket-total">0</td>
+                </tr>
+                <tr>
+                  <td>[+] SANOS:</td>
+                  <td style="text-align: right" id="ticket-sanos">0</td>
+                </tr>
+                <tr>
+                  <td>[-] RIESGO/CRÍTICOS:</td>
+                  <td style="text-align: right" id="ticket-riesgo">0</td>
+                </tr>
+              </table>
+              <hr style="border-top: 2px dashed #000; margin: 15px 0" />
+              <div style="text-align: center">
+                <p style="margin: 0; font-size: 13px">ÍNDICE DE SALUD GLOBAL</p>
+                <h1 style="margin: 5px 0; font-size: 32px" id="ticket-porcentaje">0%</h1>
+                <p style="margin: 15px 0 0 0; font-size: 10px">*** FIN DEL REPORTE ***</p>
+                <p style="margin: 5px 0 0 0; font-size: 11px"><i>"Cuidando las raíces de nuestra universidad"</i></p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-4 col-lg-5">
+                <div class="card shadow-sm mb-3 border-left-success clickable-card" onclick="location.href = 'inventario.html'">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase">Total Árboles</div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800" id="total-arboles">0</div>
+                      </div>
+                      <div class="col-auto"><i class="fas fa-tree fa-2x text-gray-300"></i></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card shadow-sm mb-3 border-left-info clickable-card" onclick="location.href = 'inventario.html'">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase">Especies</div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800" id="total-especies">0</div>
+                      </div>
+                      <div class="col-auto"><i class="fas fa-leaf fa-2x text-gray-300"></i></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card shadow-sm mb-3 border-left-warning clickable-card" onclick="location.href = 'inventario.html'">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase">Árboles Sanos</div>
+                        <div class="h3 mb-0 font-weight-bold text-gray-800" id="total-sanos">0</div>
+                      </div>
+                      <div class="col-auto"><i class="fas fa-heartbeat fa-2x text-gray-300"></i></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                  <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-success">Salud Global</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                      <canvas id="myPieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                      <span class="mr-2"><i class="fas fa-circle text-success"></i> Bueno</span>
+                      <span class="mr-2"><i class="fas fa-circle text-warning"></i> Regular</span>
+                      <span class="mr-2"><i class="fas fa-circle text-danger"></i> Malo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-8 col-lg-7">
+                <div class="card shadow-sm mb-4 h-100">
+                  <div class="card-body p-2">
+                    <div id="dashboardMap" style="height: 600px; border-radius: 8px; z-index: 1"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/chart.js/Chart.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="js/dashboard-logic.js"></script>
+  </body>
+</html>
+</file>
+
+<file path="public/inventario.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Inventario de Árboles - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+        .text-utm { color: #009688 !important; }
+        .btn-utm { background-color: #009688; color: white; border: none; }
+        .btn-utm:hover { background-color: #00796b; color: white; }
+        
+        .img-arbol-tabla { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        #mapaSeleccion { height: 250px; border-radius: 10px; width: 100%; border: 2px solid #eaecf4; }
+        .ocultar-impresion { display: table-cell; }
+        
+        @media print {
+            .ocultar-impresion, .topbar, #sidebar-container, .btn, .modal { display: none !important; }
+            #content-wrapper { background-color: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Inventario de Árboles (UTM)</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="card shadow-sm mb-4 border-0" style="border-radius: 12px;">
+                        <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center" style="border-radius: 12px 12px 0 0;">
+                            <h5 class="m-0 font-weight-bold text-utm"><i class="fas fa-list-ul mr-2"></i>Listado General</h5>
+                            <div>
+                                <button class="btn btn-secondary rounded-pill shadow-sm px-4 mr-2 font-weight-bold" onclick="window.print()">
+                                    <i class="fas fa-print mr-2"></i>Imprimir Reporte
+                                </button>
+                                <button class="btn btn-utm rounded-pill shadow-sm px-4 font-weight-bold" data-toggle="modal" data-target="#modalNuevoArbol">
+                                    <i class="fas fa-plus mr-2"></i>Agregar Árbol
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-body bg-light border-bottom">
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="small font-weight-bold text-muted">Búsqueda Rápida</label>
+                                    <input type="text" id="filtro-texto" class="form-control rounded-pill border-0 shadow-sm" placeholder="Especie o Etiqueta UTM...">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="small font-weight-bold text-muted">Filtrar por Zona</label>
+                                    <select id="filtro-zona" class="form-control rounded-pill border-0 shadow-sm">
+                                        <option value="Todas">Todas las Zonas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="small font-weight-bold text-muted">Estado de Salud</label>
+                                    <select id="filtro-estado" class="form-control rounded-pill border-0 shadow-sm">
+                                        <option value="Todos">Todos los Estados</option>
+                                        <option value="Bueno">Bueno</option>
+                                        <option value="Regular">Regular</option>
+                                        <option value="Malo">Malo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-white text-uppercase text-muted small font-weight-bold">
+                                        <tr>
+                                            <th class="pl-4 py-3">ID</th>
+                                            <th class="py-3">Foto</th>
+                                            <th class="py-3">Especie / Etiqueta</th>
+                                            <th class="py-3">Ubicación</th>
+                                            <th class="py-3 text-center">Estado</th>
+                                            <th class="py-3 text-center ocultar-impresion">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-arboles">
+                                        <tr><td colspan="6" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNuevoArbol" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-leaf mr-2"></i>Registrar Nuevo Ejemplar</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="formAgregarArbol" enctype="multipart/form-data">
+                    <div class="modal-body bg-light p-4">
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="font-weight-bold text-gray-800 small"><i class="fas fa-map-marker-alt text-danger mr-1"></i> Ubicación GPS (Haz clic en el mapa)</label>
+                                <div id="mapaSeleccion" class="mb-2 shadow-sm"></div>
+                                <div class="row">
+                                    <div class="col-6"><input type="text" id="lat" name="latitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Latitud" readonly required></div>
+                                    <div class="col-6"><input type="text" id="lng" name="longitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Longitud" readonly required></div>
+                                </div>
+                                <div class="mt-2 text-center p-2 bg-white rounded shadow-sm border">
+                                    <small class="text-muted d-block">Zona Detectada:</small>
+                                    <div id="zona-detectada-text" class="font-weight-bold">Esperando ubicación...</div>
+                                    <input type="hidden" name="id_sitio" id="id_sitio">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-7">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Código de Etiqueta (UTM)</label>
+                                    <input type="text" name="codigo_etiqueta" class="form-control form-control-solid rounded-pill" placeholder="Ej. UTM-045" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Nombre Común</label>
+                                    <div class="input-group shadow-sm rounded-pill">
+                                        <input type="text" name="nombre_comun" class="form-control border-0 rounded-left-pill bg-white" placeholder="Ej. Pino Michoacano" required>
+                                        <div class="input-group-append">
+                                            <button type="button" id="btn-autocompletar" class="btn btn-primary rounded-right-pill px-3" title="Buscar Nombre Científico"><i class="fas fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted ml-2">Escribe el nombre y presiona buscar.</small>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Nombre Científico</label>
+                                    <input type="text" name="nombre_cientifico" class="form-control form-control-solid rounded-pill text-success font-italic" placeholder="Autocompletado...">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Descripción Breve</label>
+                                    <textarea name="descripcion" class="form-control form-control-solid" rows="2" style="border-radius: 12px;"></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold text-gray-800 small">Estado de Salud</label>
+                                        <select name="estado_salud" class="form-control rounded-pill" required>
+                                            <option value="Bueno">Bueno</option>
+                                            <option value="Regular">Regular</option>
+                                            <option value="Malo">Malo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold text-gray-800 small">Campaña de Reforestación</label>
+                                        <select name="id_reforestacion" class="form-control rounded-pill border-success text-success font-weight-bold">
+                                            </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-0 mt-2">
+                                    <label class="font-weight-bold text-gray-800 small"><i class="fas fa-camera mr-1"></i> Fotografía del Ejemplar (Evidencia inicial)</label>
+                                    <input type="file" name="foto" class="form-control-file border p-2 rounded bg-white" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-light">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-utm rounded-pill px-5 font-weight-bold shadow-sm">Registrar Árbol en BD</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarArbol" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Datos del Árbol</h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="formEditarArbol">
+                    <input type="hidden" name="id_arbol" id="edit-id_arbol">
+                    <div class="modal-body p-4 bg-light">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Código / Etiqueta</label>
+                                <input type="text" name="codigo_etiqueta" id="edit-codigo" class="form-control rounded-pill" required>
+                            </div>
+                            
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700 text-danger">Nuevo Estado de Salud</label>
+                                <select name="estado_salud" id="edit-estado" class="form-control rounded-pill border-danger text-danger font-weight-bold">
+                                    <option value="">-- No actualizar estado --</option>
+                                    <option value="Bueno">Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Malo">Malo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Nombre Común</label>
+                                <input type="text" name="nombre_comun" id="edit-comun" class="form-control rounded-pill" required>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Nombre Científico</label>
+                                <input type="text" name="nombre_cientifico" id="edit-cientifico" class="form-control rounded-pill font-italic">
+                            </div>
+                            <div class="col-md-12 form-group">
+                                <label class="small font-weight-bold text-gray-700">Descripción</label>
+                                <textarea name="descripcion" id="edit-desc" class="form-control" style="border-radius: 10px;" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">Latitud</label>
+                                <input type="text" name="latitud" id="edit-lat" class="form-control form-control-sm text-center" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">Longitud</label>
+                                <input type="text" name="longitud" id="edit-lng" class="form-control form-control-sm text-center" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">ID Zona</label>
+                                <input type="number" name="id_sitio" id="edit-sitio" class="form-control form-control-sm text-center" placeholder="Ej: 2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-white">
+                        <button type="submit" class="btn btn-warning rounded-pill px-5 font-weight-bold text-dark shadow-sm">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
+    <script src="js/inventario-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="public/js/dashboard-logic.js">
+let chartPie;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. ESTO ERA LO QUE FALTABA: Cargar el menú y mostrar la página
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const mostrarPagina = () => document.body.classList.add('listo');
+
+    try {
+        const res = await fetch('components/sidebar.html');
+        const html = await res.text();
+        sidebarContainer.innerHTML = html;
+    } catch (err) { 
+        console.error("Error sidebar:", err); 
+    } finally { 
+        setTimeout(mostrarPagina, 100); 
+    }
+
+    // 2. Cargar las estadísticas de los árboles
+    cargarStats();
+});
+
+async function cargarStats() {
+    try {
+        const res = await fetch('/api/dashboard-stats');
+        const data = await res.json();
+        
+        document.getElementById('total-arboles').innerText = data.totalArboles;
+        document.getElementById('total-especies').innerText = data.totalEspecies;
+        document.getElementById('total-sanos').innerText = data.totalSanos;
+        
+        const b = data.totalSanos;
+        const r = Math.floor((data.totalArboles - b) / 2); 
+        const m = data.totalArboles - b - r;
+        generarGrafica(b, r, m);
+    } catch (e) { console.error("Error cargando stats:", e); }
+}
+
+// 3. LA MAGIA DEL TICKET (Ya con datos reales del servidor)
+window.generarTicketPDF = async function() {
+    const ticketElement = document.getElementById('ticketPDF');
+    if (!ticketElement) return alert("Error: No se encontro el diseno del ticket en el HTML.");
+
+    try {
+        const res = await fetch('/api/dashboard-stats');
+        const data = await res.json();
+
+        // Rellenamos el HTML oculto con los datos
+        document.getElementById('ticket-folio').innerText = 'UTM-' + Date.now().toString().slice(-4);
+        document.getElementById('ticket-fecha').innerText = new Date().toLocaleDateString();
+        document.getElementById('ticket-total').innerText = data.totalArboles;
+        document.getElementById('ticket-sanos').innerText = data.totalSanos;
+        document.getElementById('ticket-riesgo').innerText = data.totalArboles - data.totalSanos;
+        
+        const salud = data.totalArboles > 0 ? Math.round((data.totalSanos / data.totalArboles) * 100) : 0;
+        document.getElementById('ticket-porcentaje').innerText = salud + '%';
+
+        // Mostramos para la foto
+        ticketElement.style.display = 'block'; 
+
+        const opt = {
+            margin:       10,
+            filename:     'Ticket_ArboMap_Real.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(ticketElement).save().then(() => {
+            // Ocultamos después de la foto
+            ticketElement.style.display = 'none'; 
+        });
+
+    } catch (err) {
+        console.error("Error al generar ticket con datos reales:", err);
+        alert("Error al generar los datos del ticket.");
+    }
+}
+
+// 4. GRÁFICA DE DONA
+function generarGrafica(b, r, m) {
+    if(chartPie) chartPie.destroy();
+    const canvas = document.getElementById("myPieChart");
+    if(canvas) {
+        chartPie = new Chart(canvas, {
+            type: 'doughnut',
+            data: { 
+                labels: ["Bueno", "Regular", "Malo"], 
+                datasets: [{ data: [b, r, m], backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'] }] 
+            },
+            options: { maintainAspectRatio: false, legend: { display: false }, cutoutPercentage: 80 }
+        });
+    }
+}
+</file>
+
+<file path="public/js/index-logic.js">
+// UBICACIÓN: public/js/index-logic.js
+
+document.addEventListener('DOMContentLoaded', async () => {
+    
+    // 1. Cargar el Menú Lateral y mostrar la página suavemente para evitar parpadeos
+    fetch('components/sidebar.html')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('sidebar-container').innerHTML = html;
+            
+            // Forzamos un micro-retraso (50ms) para que el navegador acomode el menú ANTES de prender la luz (Anti-Ghosting Bulletproof)
+            setTimeout(() => {
+                document.body.classList.add('listo');
+            }, 50);
+        })
+        .catch(error => console.error("Error al cargar el menú:", error));
+
+    try {
+        // 2. Traer estadísticas de la BD (Node.js API)
+        const responseStats = await fetch('/api/dashboard-stats');
+        const dataStats = await responseStats.json();
+
+        // 3. Llenar Tarjetas Superiores
+        document.getElementById('tot-arboles').textContent = dataStats.totalArboles || 0;
+        document.getElementById('tot-especies').textContent = dataStats.totalEspecies || 0;
+        document.getElementById('tot-sanos').textContent = dataStats.totalSanos || 0;
+
+        // 4. Preparar datos para la Gráfica de Dona
+        let buenos = 0; 
+        let regulares = 0; 
+        let malos = 0; 
+        let sinRevisar = 0;
+
+        if(dataStats.arboles) {
+            dataStats.arboles.forEach(arbol => {
+                if(arbol.estado === 'Bueno') buenos++;
+                else if(arbol.estado === 'Regular') regulares++;
+                else if(arbol.estado === 'Malo') malos++;
+                else sinRevisar++; 
+            });
+        }
+
+        // 5. Configurar e instanciar Gráfica de Dona (con Animación)
+        const ctxElement = document.getElementById('saludPieChart');
+        if (ctxElement) {
+            const ctx = ctxElement.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Bueno', 'Regular', 'Malo', 'Sin Revisión'],
+                    datasets: [{
+                        data: [buenos, regulares, malos, sinRevisar],
+                        backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b', '#858796'], 
+                        hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617', '#6e707e'],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                        borderWidth: 1,
+                        borderColor: '#1a2e1f' // Borde oscuro para que combine con el fondo
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%', 
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500, 
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { color: '#fff', padding: 20 } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // 6. Configurar Mapa ITM 
+        const mapElement = document.getElementById('dashboardMap');
+        if (mapElement) {
+            const map = L.map('dashboardMap').setView([19.7267, -101.1619], 16);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OSM'
+            }).addTo(map);
+
+            // 7. Dibujar Zonas (Polígonos verdes transparentes)
+            const responseSitios = await fetch('/api/sitios');
+            const sitios = await responseSitios.json();
+
+            sitios.forEach(sitio => {
+                if (sitio.coordenadas_poligono) {
+                    try {
+                        const geojsonData = JSON.parse(sitio.coordenadas_poligono);
+                        L.geoJSON(geojsonData, {
+                            style: { color: '#1e7e34', weight: 2, fillColor: '#28a745', fillOpacity: 0.3 }
+                        }).bindPopup(`<b>${sitio.nombre_zona}</b>`).addTo(map);
+                    } catch(e) { 
+                        console.error("Error en polígono", e); 
+                    }
+                }
+            });
+
+            // 8. Dibujar Puntos de Árboles (Con tu ícono personalizado)
+            const treeIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png', 
+                iconSize: [25, 25], 
+                iconAnchor: [12, 25], 
+                popupAnchor: [0, -25]
+            });
+
+            if(dataStats.arboles) {
+                dataStats.arboles.forEach(arbol => {
+                    const lat = parseFloat(arbol.latitud);
+                    const lng = parseFloat(arbol.longitud);
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        let color = arbol.estado === 'Malo' ? 'red' : (arbol.estado === 'Regular' ? 'orange' : 'green');
+                        let popupHtml = `<div class='text-center'><b>${arbol.nombre_comun}</b><br><span style='color:${color}'>${arbol.estado || 'Sin Revisión'}</span></div>`;
+                        
+                        L.marker([lat, lng], {icon: treeIcon})
+                         .addTo(map)
+                         .bindPopup(popupHtml);
+                    }
+                });
+            }
+        }
+
+    } catch (error) {
+        console.error("Error cargando el Dashboard:", error);
+    }
+});
+</file>
+
+<file path="public/js/inventario-logic.js">
+// UBICACION: public/js/inventario-logic.js
+let todosLosArboles = [];
+let mapRegistro;
+let markerRegistro;
+let poligonosZonas = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Cargar el Menu Lateral
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+    if (cachedSidebar) {
+        sidebarContainer.innerHTML = cachedSidebar;
+        document.body.classList.add('listo');
+    } else {
+        fetch('components/sidebar.html').then(r => r.text()).then(html => {
+            sessionStorage.setItem('sidebarHTML', html); 
+            sidebarContainer.innerHTML = html;
+            setTimeout(() => { document.body.classList.add('listo'); }, 10);
+        });
+    }
+
+    // 2. Inicializar la tabla, filtros y campanas
+    cargarTablaInventario();
+    cargarCampanasSelect();
+    
+    document.getElementById('filtro-texto').addEventListener('input', aplicarFiltros);
+    document.getElementById('filtro-zona').addEventListener('change', aplicarFiltros);
+    document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
+
+    // 3. Listener: Crear Nuevo Arbol
+    document.getElementById('formAgregarArbol').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        const btn = this.querySelector('button[type="submit"]');
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = 'Guardando...'; btn.disabled = true;
+
+        try {
+            const formData = new FormData(this);
+            
+            // Agregar el ID del usuario logueado a la peticion
+            const sessionData = JSON.parse(sessionStorage.getItem('user'));
+            if(sessionData) formData.append('id_usuario', sessionData.id_usuario);
+
+            const res = await fetch('/api/arboles', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if(data.success) {
+                $('#modalNuevoArbol').modal('hide');
+                this.reset();
+                if(markerRegistro) mapRegistro.removeLayer(markerRegistro);
+                document.getElementById('zona-detectada-text').innerText = 'Esperando ubicacion...';
+                cargarTablaInventario();
+            } else {
+                alert("Error al guardar: " + data.message);
+            }
+        } catch (err) { 
+            console.error(err); 
+        } finally { 
+            btn.innerHTML = textoOriginal; btn.disabled = false; 
+        }
+    });
+
+    // 4. Listener: Actualizar Arbol Existente (CRUD: Update)
+    document.getElementById('formEditarArbol').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = 'Actualizando...'; btn.disabled = true;
+
+        const id = document.getElementById('edit-id_arbol').value;
+        const data = Object.fromEntries(new FormData(this).entries());
+        
+        try {
+            const res = await fetch(`/api/arboles/${id}`, {
+                method: 'PUT', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(data)
+            });
+            if((await res.json()).success) {
+                $('#modalEditarArbol').modal('hide');
+                cargarTablaInventario();
+            }
+        } catch(err) { 
+            console.error(err); 
+        } finally {
+            btn.innerHTML = textoOriginal; btn.disabled = false;
+        }
+    });
+});
+
+// Funcion: Dibujar la tabla con los datos actuales
+function renderizarTabla(arboles) {
+    const tbody = document.getElementById('tbody-arboles');
+    tbody.innerHTML = ''; 
+    arboles.forEach((a, i) => {
+        let badge = a.estado === 'Bueno' ? 'success' : (a.estado === 'Regular' ? 'warning' : 'danger');
+        let foto = a.foto_actual ? `/uploads/${a.foto_actual}` : 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png';
+        let zonaNombre = a.nombre_zona ? a.nombre_zona : 'Sin zona asignada';
+        
+        tbody.innerHTML += `
+            <tr class="border-bottom">
+                <td class="pl-3 font-weight-bold text-muted">${a.id_arbol || (i+1)}</td>
+                <td><img src="${foto}" class="img-arbol-tabla shadow-sm border"></td>
+                <td>
+                    <div class="font-weight-bold text-success" style="font-size: 1.05rem;">${a.nombre_comun}</div>
+                    <div class="small text-muted mb-1">${a.nombre_cientifico || 'Sin registro'}</div>
+                    <span class="badge badge-light border text-secondary shadow-none"><i class="fas fa-tag mr-1"></i>${a.codigo_etiqueta}</span>
+                </td>
+                <td><div class="font-weight-bold text-dark">${zonaNombre}</div><small class="text-info">${a.latitud}, ${a.longitud}</small></td>
+                <td><span class="badge badge-${badge} px-3 py-2 rounded-pill shadow-none">${a.estado || 'N/A'}</span></td>
+                <td class="text-center ocultar-impresion">
+                    <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" class="btn btn-sm btn-outline-info rounded-circle shadow-sm" title="Ver Expediente"><i class="fas fa-eye"></i></a>
+                    <button class="btn btn-sm btn-outline-warning rounded-circle shadow-sm mx-1" onclick="abrirModalEditar(${a.id_arbol})" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" onclick="eliminarArbol(${a.id_arbol})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+    });
+}
+
+// Funcion: Buscador y filtros desplegables
+function aplicarFiltros() {
+    const txt = document.getElementById('filtro-texto').value.toLowerCase();
+    const z = document.getElementById('filtro-zona').value;
+    const e = document.getElementById('filtro-estado').value;
+    renderizarTabla(todosLosArboles.filter(a => 
+        (a.nombre_comun.toLowerCase().includes(txt) || a.codigo_etiqueta.toLowerCase().includes(txt)) &&
+        (z === 'Todas' || (a.nombre_zona || 'General') === z) && (e === 'Todos' || a.estado === e)
+    ));
+}
+
+// Funcion: Obtener datos de la BD
+function cargarTablaInventario() {
+    fetch('/api/dashboard-stats').then(res => res.json()).then(data => {
+        todosLosArboles = data.arboles;
+        const sel = document.getElementById('filtro-zona');
+        sel.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+        [...new Set(data.arboles.map(x => x.nombre_zona).filter(z => z))].forEach(z => sel.innerHTML += `<option value="${z}">${z}</option>`);
+        renderizarTabla(todosLosArboles);
+    });
+}
+
+// Funcion: Cargar campañas para el modal de nuevo arbol
+async function cargarCampanasSelect() {
+    try {
+        const res = await fetch('/api/campanas-activas');
+        const campanas = await res.json();
+        const sel = document.querySelector('select[name="id_reforestacion"]');
+        if(sel) {
+            sel.innerHTML = '<option value="">No (Arbol ya existente)</option>';
+            campanas.forEach(c => {
+                sel.innerHTML += `<option value="${c.id_reforestacion}">${c.nombre_propuesta}</option>`;
+            });
+        }
+    } catch (e) { console.error("Error al cargar campanas", e); }
+}
+
+// ==========================================
+// FUNCIONES DE EDICION Y BORRADO
+// ==========================================
+window.abrirModalEditar = async function(id) {
+    try {
+        const res = await fetch(`/api/arboles/${id}`);
+        if (!res.ok) throw new Error("No se pudo obtener la informacion del arbol.");
+        
+        const a = await res.json();
+        document.getElementById('edit-id_arbol').value = a.id_arbol;
+        document.getElementById('edit-codigo').value = a.codigo_etiqueta;
+        document.getElementById('edit-comun').value = a.nombre_comun;
+        document.getElementById('edit-cientifico').value = a.nombre_cientifico;
+        document.getElementById('edit-desc').value = a.descripcion;
+        document.getElementById('edit-lat').value = a.latitud;
+        document.getElementById('edit-lng').value = a.longitud;
+        
+        $('#modalEditarArbol').modal('show');
+    } catch(e) { 
+        console.error("Error cargando arbol:", e); 
+        alert("Hubo un error al intentar editar el registro.");
+    }
+};
+
+window.eliminarArbol = async function(id) {
+    if(!confirm("Advertencia: Se eliminara el arbol y todo su historial medico. Continuar?")) return;
+    try {
+        const res = await fetch(`/api/arboles/${id}`, { method: 'DELETE' });
+        if((await res.json()).success) {
+            cargarTablaInventario();
+        } else {
+            alert("No se pudo eliminar el registro.");
+        }
+    } catch(e) { 
+        console.error("Error al eliminar:", e); 
+    }
+};
+
+// ==========================================
+// MAPA Y DETECCION TURF.JS
+// ==========================================
+$('#modalNuevoArbol').on('shown.bs.modal', async function () {
+    if (!mapRegistro) {
+        mapRegistro = L.map('mapaSeleccion').setView([19.7267, -101.1619], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRegistro);
+        
+        try {
+            const res = await fetch('/api/sitios');
+            const zonas = await res.json();
+            zonas.forEach(z => {
+                if (z.coordenadas_poligono) {
+                    const geojson = JSON.parse(z.coordenadas_poligono);
+                    const capa = L.geoJSON(geojson, { style: { color: '#009688', weight: 2, fillOpacity: 0.15 } }).addTo(mapRegistro);
+                    poligonosZonas.push({ id: z.id_sitio, nombre: z.nombre_zona, layer: capa });
+                }
+            });
+        } catch (error) { console.error("Error cargando zonas para el mapa", error); }
+        
+        mapRegistro.on('click', function(e) {
+            const lat = e.latlng.lat, lng = e.latlng.lng;
+            if (markerRegistro) mapRegistro.removeLayer(markerRegistro);
+            markerRegistro = L.marker([lat, lng]).addTo(mapRegistro);
+            
+            document.getElementById('lat').value = lat.toFixed(6);
+            document.getElementById('lng').value = lng.toFixed(6);
+            
+            const punto = turf.point([lng, lat]);
+            let zonaDetectada = false;
+            
+            for (let zona of poligonosZonas) {
+                let polyGeo = zona.layer.toGeoJSON();
+                let inside = false;
+                if (polyGeo.type === 'FeatureCollection') {
+                    for (let f of polyGeo.features) { if (turf.booleanPointInPolygon(punto, f)) inside = true; }
+                } else { if (turf.booleanPointInPolygon(punto, polyGeo)) inside = true; }
+                
+                if (inside) {
+                    document.getElementById('id_sitio').value = zona.id;
+                    document.getElementById('zona-detectada-text').innerHTML = `<span class="text-success font-weight-bold">${zona.nombre}</span>`;
+                    zonaDetectada = true; 
+                    break;
+                }
+            }
+            if(!zonaDetectada) {
+                document.getElementById('id_sitio').value = "";
+                document.getElementById('zona-detectada-text').innerHTML = `<span class="text-danger font-weight-bold">Fuera de zona UTM</span>`;
+            }
+        });
+    } else { 
+        mapRegistro.invalidateSize(); 
+    }
+});
+
+// ==========================================
+// BOTON INATURALIST
+// ==========================================
+document.getElementById('btn-autocompletar').addEventListener('click', async () => {
+    const nombreBusqueda = document.querySelector('input[name="nombre_comun"]').value;
+    const inputCientifico = document.querySelector('input[name="nombre_cientifico"]');
+    const inputDesc = document.querySelector('textarea[name="descripcion"]');
+    
+    if (!nombreBusqueda) return alert("Escribe un nombre comun primero");
+    
+    const btn = document.getElementById('btn-autocompletar');
+    btn.innerHTML = '...'; btn.disabled = true;
+
+    try {
+        const res = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreBusqueda)}&locale=es&per_page=1`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            const taxa = data.results[0];
+            inputCientifico.value = taxa.name;
+            if (taxa.wikipedia_summary) {
+                let resumen = taxa.wikipedia_summary.replace(/<[^>]*>?/gm, '');
+                inputDesc.value = resumen.split('\n')[0];
+            } else {
+                inputDesc.value = `Especie perteneciente al genero ${taxa.name}.`;
+            }
+        } else {
+            alert("No se encontraron resultados botánicos.");
+        }
+    } catch (e) {
+        console.error("Error consultando iNaturalist", e);
+    } finally {
+        btn.innerHTML = '<i class="fas fa-search"></i>'; btn.disabled = false;
+    }
+});
+</file>
+
+<file path="public/js/mapa-logic.js">
+// UBICACION: public/js/mapa-logic.js
+document.addEventListener('DOMContentLoaded', async () => {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) return; // Evita errores si no existe el div
+
+    // 1. Carga de Sidebar
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+    if (cachedSidebar) {
+        sidebarContainer.innerHTML = cachedSidebar;
+    } else {
+        const r = await fetch('components/sidebar.html');
+        const html = await r.text();
+        sessionStorage.setItem('sidebarHTML', html);
+        sidebarContainer.innerHTML = html;
+    }
+    document.body.classList.add('listo');
+
+    // 2. Inicializar Mapa
+    const map = L.map('map').setView([19.7267, -101.1619], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const icon = L.divIcon({
+        html: '<i class="fas fa-tree" style="color: #2e7d32; font-size: 18px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></i>',
+        className: 'custom-tree', iconSize: [10, 10], iconAnchor: [12, 18]
+    });
+
+    // 3. Cargar Datos
+    try {
+        const resZonas = await fetch('/api/sitios');
+        const zonas = await resZonas.json();
+        zonas.forEach(z => {
+            if (z.coordenadas_poligono) {
+                const layer = L.geoJSON(JSON.parse(z.coordenadas_poligono), { 
+                    style: { color: '#008B8B', weight: 2, fillOpacity: 0.15 } 
+                }).addTo(map);
+                layer.on('click', () => mostrarInfoZona(z));
+            }
+        });
+
+        const resArboles = await fetch('/api/dashboard-stats');
+        const data = await resArboles.json();
+        data.arboles.forEach(a => {
+            const m = L.marker([a.latitud, a.longitud], { icon }).addTo(map);
+            m.on('click', (e) => { 
+                L.DomEvent.stopPropagation(e); 
+                mostrarInfoArbol(a); 
+            });
+        });
+    } catch (e) { console.error("Error cargando datos del mapa:", e); }
+});
+
+function mostrarInfoArbol(a) {
+    let bad = a.estado === 'Bueno' ? 'success' : (a.estado === 'Regular' ? 'warning' : 'danger');
+    let fot = a.foto_actual ? `/uploads/${a.foto_actual}` : 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png';
+    document.getElementById('info-panel').innerHTML = `
+        <div class="text-center">
+            <img src="${fot}" class="img-fluid rounded border mb-3" style="height:200px; width:100%; object-fit:cover;">
+            <h4 class="font-weight-bold text-success">${a.nombre_comun}</h4>
+            <span class="badge badge-${bad} px-3 py-2 mb-4">${a.estado || 'N/A'}</span>
+            <div class="text-left bg-light p-3 rounded border mb-3">
+                <small><b>Etiqueta:</b> ${a.codigo_etiqueta}</small><br>
+                <small><b>Zona:</b> ${a.nombre_zona || 'General'}</small>
+            </div>
+            <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" class="btn btn-success btn-block rounded-pill">Ver Expediente</a>
+        </div>`;
+}
+
+function mostrarInfoZona(z) {
+    document.getElementById('info-panel').innerHTML = `
+        <div class="text-center h-100 d-flex flex-column justify-content-center">
+            <i class="fas fa-draw-polygon fa-4x text-warning mb-4"></i>
+            <h4 class="font-weight-bold">${z.nombre_zona}</h4>
+            <div class="bg-light p-3 rounded border mt-3 text-left">
+                <small class="text-muted font-weight-bold">ENCARGADO:</small>
+                <p class="mb-0"><b>${z.encargado || 'Sin asignar'}</b></p>
+            </div>
+        </div>`;
+}
+</file>
+
+<file path="public/js/reforestacion-logic.js">
+document.addEventListener('DOMContentLoaded', async () => {
+    const sidebarContainer = document.getElementById('sidebar-container');
+    const mostrarPagina = () => document.body.classList.add('listo');
+
+    // 1. Cargar el menú lateral y verificar sesión
+    try {
+        const res = await fetch('components/sidebar.html');
+        const html = await res.text();
+        sidebarContainer.innerHTML = html;
+    } catch (err) { console.error("Error sidebar:", err); }
+    finally { setTimeout(mostrarPagina, 100); }
+
+    // 2. Cargar la tabla de campañas al iniciar
+    cargarReforestaciones();
+
+    // ---------------------------------------------------------
+    // EVENTOS DE LOS FORMULARIOS
+    // ---------------------------------------------------------
+
+    // A. Enviar Nueva Propuesta
+    document.getElementById('formPropuesta').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        try {
+            const res = await fetch('/api/reforestacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if ((await res.json()).success) {
+                $('#modalPropuesta').modal('hide');
+                e.target.reset();
+                cargarReforestaciones();
+            }
+        } catch (err) { console.error("Error:", err); }
+    });
+
+    // B. Aprobar Campaña
+    document.getElementById('formAprobar').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        try {
+            const res = await fetch('/api/reforestacion/aprobar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if ((await res.json()).success) {
+                $('#modalAprobar').modal('hide');
+                cargarReforestaciones();
+            }
+        } catch (err) { console.error("Error:", err); }
+    });
+
+    // C. Guardar Edición de Campaña
+    document.getElementById('formEditarCampana').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        const id = document.getElementById('edit-id').value;
+        try {
+            const res = await fetch(`/api/reforestacion/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if ((await res.json()).success) {
+                $('#modalEditarCampana').modal('hide');
+                cargarReforestaciones();
+            }
+        } catch (err) { console.error("Error:", err); }
+    });
+});
+
+// ---------------------------------------------------------
+// FUNCIONES PRINCIPALES
+// ---------------------------------------------------------
+
+async function cargarReforestaciones() {
+    const contenedor = document.getElementById('contenedor-campanas');
+    contenedor.innerHTML = `<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></td></tr>`;
+
+    try {
+        const res = await fetch('/api/reforestacion');
+        const campanas = await res.json();
+        
+        // Verificamos si el usuario es Admin para mostrarle ciertos botones
+        const userStr = sessionStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const isAdmin = user && user.id_rol === 1;
+
+        if (!campanas || campanas.length === 0) {
+            contenedor.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No hay campañas registradas.</td></tr>`;
+            return;
+        }
+
+        contenedor.innerHTML = campanas.map(c => {
+            const plantados = c.cantidad_plantada || 0;
+            const meta = c.cantidad_meta || 1;
+            const pct = Math.min(Math.round((plantados / meta) * 100), 100);
+            const esPropuesta = !c.id_reforestacion;
+
+            // Etiquetas de estado
+            const badgePropuesta = esPropuesta 
+                ? `<span class="badge badge-warning">Propuesta</span>` 
+                : `<span class="badge badge-success">Aprobada</span>`;
+            
+            const badgeEstado = !esPropuesta 
+                ? `<br><small class="text-muted">${c.estado}</small>` 
+                : '';
+
+            // Botones de Acción (Solo Admin puede Aprobar, Editar y Eliminar)
+            let acciones = '';
+            
+            if (esPropuesta && isAdmin) {
+                acciones = `<button class="btn btn-sm btn-outline-primary rounded-circle" onclick="abrirAprobar(${c.id_propuesta}, ${c.cantidad_meta})" title="Aprobar"><i class="fas fa-check"></i></button>`;
+            } else if (!esPropuesta) {
+                acciones += `
+                    <button class="btn btn-sm btn-outline-warning rounded-circle mx-1" onclick="abrirEditarCampana(${c.id_reforestacion})" title="Editar"><i class="fas fa-edit"></i></button>
+                    ${isAdmin ? `<button class="btn btn-sm btn-outline-danger rounded-circle" onclick="eliminarCampana(${c.id_reforestacion})" title="Eliminar"><i class="fas fa-trash"></i></button>` : ''}
+                `;
+            }
+
+            return `
+            <tr>
+                <td class="font-weight-bold text-muted">${c.id_propuesta}</td>
+                <td class="font-weight-bold text-success">${c.nombre_propuesta}</td>
+                <td>${c.nombre_zona || '<span class="text-muted">Sin asignar</span>'}</td>
+                <td>
+                    <div class="progress mb-1" style="height:10px;">
+                        <div class="progress-bar bg-success" style="width:${pct}%"></div>
+                    </div>
+                    <small class="text-muted">${plantados} de ${meta} árboles</small>
+                </td>
+                <td>${badgePropuesta}${badgeEstado}</td>
+                <td>${acciones}</td>
+            </tr>`;
+        }).join('');
+    } catch (err) { 
+        contenedor.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error al cargar datos.</td></tr>`;
+    }
+}
+
+// ---------------------------------------------------------
+// FUNCIONES DE MODALES Y ALERTAS
+// ---------------------------------------------------------
+
+window.abrirAprobar = async (id, meta) => {
+    document.getElementById('aprobar-id').value = id;
+    document.getElementById('aprobar-meta').value = meta;
+    try {
+        const res = await fetch('/api/sitios');
+        const sitios = await res.json();
+        const sel = document.getElementById('select-sitios');
+        sel.innerHTML = sitios.map(s => `<option value="${s.id_sitio}">${s.nombre_zona}</option>`).join('');
+        $('#modalAprobar').modal('show');
+    } catch (err) { console.error(err); }
+};
+
+window.abrirEditarCampana = async (id_reforestacion) => {
+    try {
+        // 1. Cargar sitios en el select
+        const resSitios = await fetch('/api/sitios');
+        const sitios = await resSitios.json();
+        const sel = document.getElementById('edit-sitio');
+        sel.innerHTML = sitios.map(s => `<option value="${s.id_sitio}">${s.nombre_zona}</option>`).join('');
+
+        // 2. Traer los datos de la campaña para llenar el modal
+        const res = await fetch(`/api/reforestacion/detalles/${id_reforestacion}`);
+        const data = await res.json();
+        const camp = data.campana;
+
+        document.getElementById('edit-id').value = camp.id_reforestacion;
+        document.getElementById('edit-nombre').value = camp.nombre_propuesta;
+        document.getElementById('edit-meta').value = camp.cantidad_meta;
+        if (camp.id_sitio) document.getElementById('edit-sitio').value = camp.id_sitio;
+        if (camp.fecha_evento) document.getElementById('edit-fecha').value = camp.fecha_evento.split('T')[0];
+
+        $('#modalEditarCampana').modal('show');
+    } catch (err) { console.error("Error al abrir edición:", err); }
+};
+
+window.eliminarCampana = async (id) => {
+    if(!confirm(" ¿Estás seguro? La campaña se borrará, pero los árboles plantados se conservarán en el inventario general.")) return;
+    try {
+        const res = await fetch(`/api/reforestacion/${id}`, { method: 'DELETE' });
+        if ((await res.json()).success) {
+            cargarReforestaciones();
+        } else {
+            alert("Error al eliminar la campaña.");
+        }
+    } catch (err) { console.error("Error al eliminar:", err); }
+};
+</file>
+
+<file path="public/mapa.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Explorador del Campus - ARBOMAP</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        .topbar-utm { background-color: #009688; }
+        .info-card { transition: all 0.3s ease; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Mapa Interactivo (UTM)</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px; overflow: hidden;">
+                                <div class="card-body p-1">
+                                    <div id="map" style="height: 75vh; width: 100%; z-index: 1;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow-sm border-0 mb-4 info-card" style="border-radius: 10px; height: 75vh; overflow-y: auto;">
+                                <div class="card-body p-4" id="info-panel">
+                                    <div class="d-flex flex-column justify-content-center align-items-center text-center h-100 p-3">
+                                        <i class="fas fa-search-location mb-4" style="font-size: 5rem; color: #009688;"></i>
+                                        <h4 class="font-weight-bold text-dark mb-3" style="color: #009688 !important;">Explora la UTM</h4>
+                                        <p class="text-muted" style="font-size: 1.1rem;">Haz clic en un árbol en el mapa para ver sus detalles o en una zona para identificarla.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/mapa-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="public/reforestacion.html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Gestión de Reforestación - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    
+    <script src="js/auth-guard.js"></script>
+
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
+        .topbar-utm { background-color: #009688; }
+        #sidebar-container { background-color: #1A252F; display: flex; }
+        .card-campana { border-radius: 12px; border: none; border-left: 5px solid #009688; transition: 0.3s; }
+        .progress { height: 10px; border-radius: 5px; background-color: #eaecf4; }
+        .btn-success-utm { background-color: #009688; border: none; }
+        .btn-success-utm:hover { background-color: #00796b; }
+        .text-utm { color: #009688 !important; }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div id="sidebar-container"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Gestión de Reforestación</h1>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h2 class="h5 mb-0 text-gray-800 font-weight-bold">Campañas y Propuestas</h2>
+                        <button class="btn btn-success-utm rounded-pill px-4 shadow-sm text-white font-weight-bold" data-toggle="modal" data-target="#modalPropuesta">
+                            <i class="fas fa-plus mr-1"></i> Nueva Propuesta
+                        </button>
+                    </div>
+
+                    <div class="card shadow-sm mb-4" style="border-radius: 12px; border: none;">
+                        <div class="card-body p-0">
+                            <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+                                <h6 class="m-0 font-weight-bold text-utm">
+                                    <i class="fas fa-list mr-2"></i>Listado de Campañas
+                                </h6>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">ID</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Campaña</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Zona / Sitio</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Progreso</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0">Estado</th>
+                                            <th class="small text-uppercase text-muted font-weight-bold border-0 text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contenedor-campanas">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPropuesta" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold">Proponer Reforestación</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="formPropuesta">
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Nombre de la Propuesta</label>
+                            <input type="text" name="nombre_propuesta" class="form-control rounded-pill border-light bg-light" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Cantidad de Árboles (Meta)</label>
+                            <input type="number" name="cantidad_meta" class="form-control rounded-pill border-light bg-light" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-success-utm rounded-pill px-5 font-weight-bold shadow-sm">Enviar Propuesta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAprobar" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-primary text-white" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold">Aprobar y Activar Campaña</h5>
+                </div>
+                <form id="formAprobar">
+                    <input type="hidden" name="id_propuesta" id="aprobar-id">
+                    <input type="hidden" name="cantidad_esperada" id="aprobar-meta">
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Asignar Zona / Sitio</label>
+                            <select name="id_sitio" id="select-sitios" class="form-control rounded-pill" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Fecha Programada</label>
+                            <input type="date" name="fecha_evento" class="form-control rounded-pill" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 font-weight-bold shadow-sm">Activar Campaña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarCampana" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Campaña</h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="formEditarCampana">
+                    <input type="hidden" id="edit-id">
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Nombre de la Campaña</label>
+                            <input type="text" name="nombre_propuesta" id="edit-nombre" class="form-control rounded-pill bg-light border-0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Meta de Árboles</label>
+                            <input type="number" name="cantidad_meta" id="edit-meta" class="form-control rounded-pill bg-light border-0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Zona</label>
+                            <select name="id_sitio" id="edit-sitio" class="form-control rounded-pill bg-light border-0" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-gray-700">Fecha</label>
+                            <input type="date" name="fecha_evento" id="edit-fecha" class="form-control rounded-pill bg-light border-0">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                        <button type="submit" class="btn btn-warning font-weight-bold text-dark rounded-pill px-5 shadow-sm">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/reforestacion-logic.js"></script>
+</body>
+</html>
+</file>
+
+<file path="server.js">
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const multer = require('multer');
+const fs = require('fs');
+const db = require('./src/config/db');
+const bcrypt = require('bcryptjs');
+
+const app = express();
+const PORT = 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// carpeta uploads
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+// multer config
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'evidencia_' + unique + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage });
+
+// ---------------- AUTH ----------------
+app.post('/api/login', async (req, res) => {
+    try {
+        const { matricula, password } = req.body;
+        const [rows] = await db.query('SELECT * FROM usuario WHERE matricula = ?', [matricula]);
+
+        if (rows.length === 0) return res.status(401).json({ success: false });
+
+        const user = rows[0];
+        const match = await bcrypt.compare(password, user.password);
+
+        if (!match) return res.status(401).json({ success: false });
+
+        delete user.password;
+        user.rol_nombre = user.id_rol === 1 ? 'Administrador' : 'Voluntario Activo';
+
+        res.json({ success: true, user });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- DASHBOARD ----------------
+app.get('/api/dashboard-stats', async (req, res) => {
+    try {
+        const [total] = await db.query('SELECT COUNT(*) as t FROM arbol');
+        const [esp] = await db.query('SELECT COUNT(*) as t FROM especie');
+
+        const [mapa] = await db.query(`
+            SELECT a.*, e.nombre_comun, s.nombre_zona,
+            (SELECT estado_salud FROM seguimiento 
+             WHERE id_arbol = a.id_arbol 
+             ORDER BY fecha_revision DESC LIMIT 1) as estado
+            FROM arbol a
+            JOIN especie e ON a.id_especie = e.id_especie
+            LEFT JOIN sitio s ON a.id_sitio = s.id_sitio
+        `);
+
+        res.json({
+            totalArboles: total[0].t,
+            totalEspecies: esp[0].t,
+            arboles: mapa
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- EXPEDIENTE ----------------
+app.get('/api/arbol/expediente/:codigo', async (req, res) => {
+    try {
+        const { codigo } = req.params;
+
+        const [arbol] = await db.query(`
+            SELECT a.*, e.nombre_comun, e.nombre_cientifico, s.nombre_zona
+            FROM arbol a
+            JOIN especie e ON a.id_especie = e.id_especie
+            LEFT JOIN sitio s ON a.id_sitio = s.id_sitio
+            WHERE a.codigo_etiqueta = ?
+        `, [codigo]);
+
+        if (arbol.length === 0) {
+            return res.status(404).json({ error: 'No encontrado' });
+        }
+
+        const [historial] = await db.query(`
+            SELECT s.*, u.nombre as usuario_nombre
+            FROM seguimiento s
+            LEFT JOIN usuario u ON s.id_usuario = u.id_usuario
+            WHERE s.id_arbol = ?
+            ORDER BY fecha_revision DESC
+        `, [arbol[0].id_arbol]);
+
+        res.json({ arbol: arbol[0], historial });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- SEGUIMIENTO ----------------
+
+// crear
+app.post('/api/seguimiento', upload.single('foto'), async (req, res) => {
+    try {
+        const { id_arbol, estado_salud, comentarios, id_usuario } = req.body;
+
+        await db.query(`
+            INSERT INTO seguimiento 
+            (fecha_revision, estado_salud, comentarios, foto_url, id_arbol, id_usuario)
+            VALUES (NOW(), ?, ?, ?, ?, ?)
+        `, [
+            estado_salud,
+            comentarios,
+            req.file ? req.file.filename : null,
+            id_arbol,
+            id_usuario || 1
+        ]);
+
+        res.json({ success: true });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// editar
+app.put('/api/seguimiento/:id', async (req, res) => {
+    try {
+        const { estado_salud, comentarios } = req.body;
+
+        await db.query(`
+            UPDATE seguimiento
+            SET estado_salud = ?, comentarios = ?
+            WHERE id_seguimiento = ?
+        `, [estado_salud, comentarios, req.params.id]);
+
+        res.json({ success: true });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// eliminar
+app.delete('/api/seguimiento/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM seguimiento WHERE id_seguimiento = ?', [req.params.id]);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- ADOPTAR ----------------
+app.post('/api/arbol/adoptar', async (req, res) => {
+    try {
+        const { codigo_etiqueta, id_usuario } = req.body;
+
+        await db.query(`
+            UPDATE arbol 
+            SET id_usuario = ?, fecha_asignacion = NOW()
+            WHERE codigo_etiqueta = ?
+        `, [id_usuario, codigo_etiqueta]);
+
+        res.json({ success: true });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- ARBOLES ----------------
+app.post('/api/arboles', upload.single('foto'), async (req, res) => {
+    const conn = await db.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        const { codigo_etiqueta, latitud, longitud, nombre_comun, nombre_cientifico, descripcion } = req.body;
+
+        const [esp] = await conn.query('SELECT id_especie FROM especie WHERE nombre_comun = ?', [nombre_comun]);
+
+        const id_esp = esp.length > 0
+            ? esp[0].id_especie
+            : (await conn.query(
+                'INSERT INTO especie (nombre_comun, nombre_cientifico, descripcion) VALUES (?,?,?)',
+                [nombre_comun, nombre_cientifico, descripcion]
+            ))[0].insertId;
+
+        await conn.query(`
+            INSERT INTO arbol (codigo_etiqueta, latitud, longitud, fecha_plantado, id_especie)
+            VALUES (?,?,?,CURDATE(),?)
+        `, [codigo_etiqueta, latitud, longitud, id_esp]);
+
+        await conn.commit();
+        res.json({ success: true });
+
+    } catch (e) {
+        await conn.rollback();
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    } finally {
+        conn.release();
+    }
+});
+
+// ---------------- REFORESTACION ----------------
+app.get('/api/reforestacion', async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT p.id_propuesta, p.nombre_propuesta,
+            r.id_reforestacion, r.estado
+            FROM propuesta_reforestacion p
+            LEFT JOIN reforestacion r ON p.id_propuesta = r.id_propuesta
+        `);
+
+        res.json(rows);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Error servidor' });
+    }
+});
+
+// ---------------- SERVER ----------------
+app.listen(PORT, () => {
+    console.log(`Servidor en http://localhost:${PORT}`);
+});
+</file>
+
+</files>

@@ -1,11 +1,9 @@
-// UBICACION: public/js/inventario-logic.js
 let todosLosArboles = [];
 let mapRegistro;
 let markerRegistro;
 let poligonosZonas = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Cargar el Menu Lateral
     const sidebarContainer = document.getElementById('sidebar-container');
     const cachedSidebar = sessionStorage.getItem('sidebarHTML');
     if (cachedSidebar) {
@@ -19,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Inicializar la tabla, filtros y campanas
     cargarTablaInventario();
     cargarCampanasSelect();
     
@@ -27,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filtro-zona').addEventListener('change', aplicarFiltros);
     document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
 
-    // 3. Listener: Crear Nuevo Arbol
     document.getElementById('formAgregarArbol').addEventListener('submit', async function(e) {
         e.preventDefault(); 
         const btn = this.querySelector('button[type="submit"]');
@@ -36,31 +32,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const formData = new FormData(this);
-            
-            // Agregar el ID del usuario logueado a la peticion
             const sessionData = JSON.parse(sessionStorage.getItem('user'));
             if(sessionData) formData.append('id_usuario', sessionData.id_usuario);
 
-            const res = await fetch('/api/arboles', { method: 'POST', body: formData });
-            const data = await res.json();
+            await ApiService.post('/trees', formData);
             
-            if(data.success) {
-                $('#modalNuevoArbol').modal('hide');
-                this.reset();
-                if(markerRegistro) mapRegistro.removeLayer(markerRegistro);
-                document.getElementById('zona-detectada-text').innerText = 'Esperando ubicacion...';
-                cargarTablaInventario();
-            } else {
-                alert("Error al guardar: " + data.message);
-            }
+            $('#modalNuevoArbol').modal('hide');
+            this.reset();
+            if(markerRegistro) mapRegistro.removeLayer(markerRegistro);
+            document.getElementById('zona-detectada-text').innerText = 'Esperando ubicación...';
+            cargarTablaInventario();
         } catch (err) { 
-            console.error(err); 
+            alert("Error al guardar: " + err.message);
         } finally { 
-            btn.innerHTML = textoOriginal; btn.disabled = false; 
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false; 
         }
     });
 
-    // 4. Listener: Actualizar Arbol Existente (CRUD: Update)
     document.getElementById('formEditarArbol').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = this.querySelector('button[type="submit"]');
@@ -71,24 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = Object.fromEntries(new FormData(this).entries());
         
         try {
-            const res = await fetch(`/api/arboles/${id}`, {
-                method: 'PUT', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify(data)
-            });
-            if((await res.json()).success) {
-                $('#modalEditarArbol').modal('hide');
-                cargarTablaInventario();
-            }
+            await ApiService.put(`/trees/${id}`, data);
+            $('#modalEditarArbol').modal('hide');
+            cargarTablaInventario();
         } catch(err) { 
-            console.error(err); 
+            alert("Error al actualizar: " + err.message);
         } finally {
-            btn.innerHTML = textoOriginal; btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
         }
     });
 });
 
-// Funcion: Dibujar la tabla con los datos actuales
 function renderizarTabla(arboles) {
     const tbody = document.getElementById('tbody-arboles');
     tbody.innerHTML = ''; 
@@ -117,7 +100,6 @@ function renderizarTabla(arboles) {
     });
 }
 
-// Funcion: Buscador y filtros desplegables
 function aplicarFiltros() {
     const txt = document.getElementById('filtro-texto').value.toLowerCase();
     const z = document.getElementById('filtro-zona').value;
@@ -128,41 +110,37 @@ function aplicarFiltros() {
     ));
 }
 
-// Funcion: Obtener datos de la BD
-function cargarTablaInventario() {
-    fetch('/api/dashboard-stats').then(res => res.json()).then(data => {
+async function cargarTablaInventario() {
+    try {
+        const data = await ApiService.get('/trees/stats');
         todosLosArboles = data.arboles;
         const sel = document.getElementById('filtro-zona');
         sel.innerHTML = '<option value="Todas">Todas las Zonas</option>';
         [...new Set(data.arboles.map(x => x.nombre_zona).filter(z => z))].forEach(z => sel.innerHTML += `<option value="${z}">${z}</option>`);
         renderizarTabla(todosLosArboles);
-    });
+    } catch (e) {
+        console.error("Error al cargar inventario:", e);
+    }
 }
 
-// Funcion: Cargar campañas para el modal de nuevo arbol
 async function cargarCampanasSelect() {
     try {
-        const res = await fetch('/api/campanas-activas');
-        const campanas = await res.json();
+        const campanas = await ApiService.get('/campaigns/active');
         const sel = document.querySelector('select[name="id_reforestacion"]');
         if(sel) {
-            sel.innerHTML = '<option value="">No (Arbol ya existente)</option>';
+            sel.innerHTML = '<option value="">No (Árbol ya existente)</option>';
             campanas.forEach(c => {
                 sel.innerHTML += `<option value="${c.id_reforestacion}">${c.nombre_propuesta}</option>`;
             });
         }
-    } catch (e) { console.error("Error al cargar campanas", e); }
+    } catch (e) { 
+        console.error("Error al cargar campañas", e);
+    }
 }
 
-// ==========================================
-// FUNCIONES DE EDICION Y BORRADO
-// ==========================================
 window.abrirModalEditar = async function(id) {
     try {
-        const res = await fetch(`/api/arboles/${id}`);
-        if (!res.ok) throw new Error("No se pudo obtener la informacion del arbol.");
-        
-        const a = await res.json();
+        const a = await ApiService.get(`/trees/${id}`);
         document.getElementById('edit-id_arbol').value = a.id_arbol;
         document.getElementById('edit-codigo').value = a.codigo_etiqueta;
         document.getElementById('edit-comun').value = a.nombre_comun;
@@ -171,38 +149,32 @@ window.abrirModalEditar = async function(id) {
         document.getElementById('edit-lat').value = a.latitud;
         document.getElementById('edit-lng').value = a.longitud;
         
+       
+        document.getElementById('edit-sitio').value = a.id_sitio || '';
+        
         $('#modalEditarArbol').modal('show');
     } catch(e) { 
-        console.error("Error cargando arbol:", e); 
         alert("Hubo un error al intentar editar el registro.");
     }
 };
 
 window.eliminarArbol = async function(id) {
-    if(!confirm("Advertencia: Se eliminara el arbol y todo su historial medico. Continuar?")) return;
+    if(!confirm("Advertencia: Se eliminará el árbol y todo su historial médico. ¿Continuar?")) return;
     try {
-        const res = await fetch(`/api/arboles/${id}`, { method: 'DELETE' });
-        if((await res.json()).success) {
-            cargarTablaInventario();
-        } else {
-            alert("No se pudo eliminar el registro.");
-        }
+        await ApiService.delete(`/trees/${id}`);
+        cargarTablaInventario();
     } catch(e) { 
-        console.error("Error al eliminar:", e); 
+        alert("No se pudo eliminar el registro: " + e.message); 
     }
 };
 
-// ==========================================
-// MAPA Y DETECCION TURF.JS
-// ==========================================
 $('#modalNuevoArbol').on('shown.bs.modal', async function () {
     if (!mapRegistro) {
         mapRegistro = L.map('mapaSeleccion').setView([19.7267, -101.1619], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRegistro);
         
         try {
-            const res = await fetch('/api/sitios');
-            const zonas = await res.json();
+            const zonas = await ApiService.get('/sites');
             zonas.forEach(z => {
                 if (z.coordenadas_poligono) {
                     const geojson = JSON.parse(z.coordenadas_poligono);
@@ -210,7 +182,9 @@ $('#modalNuevoArbol').on('shown.bs.modal', async function () {
                     poligonosZonas.push({ id: z.id_sitio, nombre: z.nombre_zona, layer: capa });
                 }
             });
-        } catch (error) { console.error("Error cargando zonas para el mapa", error); }
+        } catch (error) { 
+            console.error("Error cargando zonas para el mapa", error);
+        }
         
         mapRegistro.on('click', function(e) {
             const lat = e.latlng.lat, lng = e.latlng.lng;
@@ -247,15 +221,12 @@ $('#modalNuevoArbol').on('shown.bs.modal', async function () {
     }
 });
 
-// ==========================================
-// BOTON INATURALIST
-// ==========================================
 document.getElementById('btn-autocompletar').addEventListener('click', async () => {
     const nombreBusqueda = document.querySelector('input[name="nombre_comun"]').value;
     const inputCientifico = document.querySelector('input[name="nombre_cientifico"]');
     const inputDesc = document.querySelector('textarea[name="descripcion"]');
     
-    if (!nombreBusqueda) return alert("Escribe un nombre comun primero");
+    if (!nombreBusqueda) return alert("Escribe un nombre común primero");
     
     const btn = document.getElementById('btn-autocompletar');
     btn.innerHTML = '...'; btn.disabled = true;
@@ -263,6 +234,7 @@ document.getElementById('btn-autocompletar').addEventListener('click', async () 
     try {
         const res = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreBusqueda)}&locale=es&per_page=1`);
         const data = await res.json();
+       
         if (data.results && data.results.length > 0) {
             const taxa = data.results[0];
             inputCientifico.value = taxa.name;
@@ -270,7 +242,7 @@ document.getElementById('btn-autocompletar').addEventListener('click', async () 
                 let resumen = taxa.wikipedia_summary.replace(/<[^>]*>?/gm, '');
                 inputDesc.value = resumen.split('\n')[0];
             } else {
-                inputDesc.value = `Especie perteneciente al genero ${taxa.name}.`;
+                inputDesc.value = `Especie perteneciente al género ${taxa.name}.`;
             }
         } else {
             alert("No se encontraron resultados botánicos.");

@@ -1,65 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Inventario de arboles (UTM) - ARBOMAP</title>
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
-    <link href="css/sb-admin-2.min.css" rel="stylesheet" />
-    <script src="js/auth-guard.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Inventario de Árboles - ARBOMAP UTM</title>
+    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="js/api-service.js"></script>
+
     <style>
-        body { background-color: #f8f9fc; visibility: hidden; opacity: 0; }
-        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s ease-out; }
+        body { font-family: "Inter", sans-serif; background-color: #f8f9fc; visibility: hidden; opacity: 0; }
+        body.listo { visibility: visible; opacity: 1; transition: opacity 0.1s; }
         .topbar-utm { background-color: #009688; }
-        .img-arbol-tabla { width: 55px; height: 55px; object-fit: cover; border-radius: 8px; }
         #sidebar-container { background-color: #1A252F; display: flex; }
-        #mapaSeleccion { height: 350px; width: 100%; border-radius: 10px; cursor: crosshair; border: 2px solid #ddd; }
-        .table-custom th { border-top: none !important; border-bottom: 2px solid #e3e6f0 !important; color: #6e707e; font-size: 0.85rem; }
-        .table-custom td { vertical-align: middle !important; }
+        .text-utm { color: #009688 !important; }
+        .btn-utm { background-color: #009688; color: white; border: none; }
+        .btn-utm:hover { background-color: #00796b; color: white; }
         
-        /* Ocultar elementos irrelevantes al generar PDF/Impresion */
+        .img-arbol-tabla { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        #mapaSeleccion { height: 250px; border-radius: 10px; width: 100%; border: 2px solid #eaecf4; }
+        .ocultar-impresion { display: table-cell; }
+        
         @media print {
-            #sidebar-container, .topbar, .btn, .ocultar-impresion { display: none !important; }
-            body { background-color: white; }
+            .ocultar-impresion, .topbar, #sidebar-container, .btn, .modal { display: none !important; }
+            #content-wrapper { background-color: white !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
             .card { border: none !important; box-shadow: none !important; }
-            .table th:last-child, .table td:last-child { display: none !important; }
         }
     </style>
 </head>
+
 <body id="page-top">
     <div id="wrapper">
         <div id="sidebar-container"></div>
+
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <nav class="navbar navbar-expand topbar mb-4 static-top shadow-sm topbar-utm">
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars text-white"></i></button>
-                    <h1 class="h4 mb-0 text-white font-weight-bold">Inventario de arboles (UTM)</h1>
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars text-white"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-white font-weight-bold">Inventario de Árboles (UTM)</h1>
                 </nav>
-                
+
                 <div class="container-fluid">
-                    <div class="card shadow-sm border-0 mb-4">
-                        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center border-bottom-0">
-                            <h6 class="m-0 font-weight-bold text-info" style="font-size: 1.1rem;"><i class="fas fa-list-ul mr-2"></i>Listado General</h6>
+                    <div class="card shadow-sm mb-4 border-0" style="border-radius: 12px;">
+                        <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center" style="border-radius: 12px 12px 0 0;">
+                            <h5 class="m-0 font-weight-bold text-utm"><i class="fas fa-list-ul mr-2"></i>Listado General</h5>
                             <div>
-                                <button onclick="window.print()" class="btn btn-secondary rounded-pill px-4 shadow-sm font-weight-bold mr-2"><i class="fas fa-print mr-1"></i> Imprimir Reporte</button>
-                                <button class="btn btn-success rounded-pill px-4 shadow-sm font-weight-bold" data-toggle="modal" data-target="#modalNuevoArbol"><i class="fas fa-plus mr-1"></i> Agregar Arbol</button>
+                                <button class="btn btn-secondary rounded-pill shadow-sm px-4 mr-2 font-weight-bold" onclick="window.print()">
+                                    <i class="fas fa-print mr-2"></i>Imprimir Reporte
+                                </button>
+                                <button class="btn btn-utm rounded-pill shadow-sm px-4 font-weight-bold" data-toggle="modal" data-target="#modalNuevoArbol">
+                                    <i class="fas fa-plus mr-2"></i>Agregar Árbol
+                                </button>
                             </div>
                         </div>
-                        
-                        <div class="card-body pt-0">
-                            <div class="row mb-4 bg-light p-3 rounded border mx-0 ocultar-impresion">
-                                <div class="col-md-4 mb-2 mb-md-0">
-                                    <label class="small font-weight-bold text-muted">Busqueda Rapida</label>
-                                    <input type="text" id="filtro-texto" class="form-control bg-white shadow-none" placeholder="Especie o Etiqueta UTM..." />
+
+                        <div class="card-body bg-light border-bottom">
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="small font-weight-bold text-muted">Búsqueda Rápida</label>
+                                    <input type="text" id="filtro-texto" class="form-control rounded-pill border-0 shadow-sm" placeholder="Especie o Etiqueta UTM...">
                                 </div>
-                                <div class="col-md-4 mb-2 mb-md-0">
+                                <div class="col-md-4 mb-2">
                                     <label class="small font-weight-bold text-muted">Filtrar por Zona</label>
-                                    <select id="filtro-zona" class="form-control bg-white shadow-none"><option value="Todas">Todas las Zonas</option></select>
+                                    <select id="filtro-zona" class="form-control rounded-pill border-0 shadow-sm">
+                                        <option value="Todas">Todas las Zonas</option>
+                                    </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 mb-2">
                                     <label class="small font-weight-bold text-muted">Estado de Salud</label>
-                                    <select id="filtro-estado" class="form-control bg-white shadow-none">
+                                    <select id="filtro-estado" class="form-control rounded-pill border-0 shadow-sm">
                                         <option value="Todos">Todos los Estados</option>
                                         <option value="Bueno">Bueno</option>
                                         <option value="Regular">Regular</option>
@@ -67,20 +83,24 @@
                                     </select>
                                 </div>
                             </div>
+                        </div>
 
+                        <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover table-custom" id="tabla-arboles">
-                                    <thead class="bg-white font-weight-bold text-uppercase">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-white text-uppercase text-muted small font-weight-bold">
                                         <tr>
-                                            <th class="pl-3">ID</th>
-                                            <th>Foto</th>
-                                            <th>Especie / Etiqueta</th>
-                                            <th>Ubicacion</th>
-                                            <th>Estado</th>
-                                            <th class="text-center">Acciones</th>
+                                            <th class="pl-4 py-3">ID</th>
+                                            <th class="py-3">Foto</th>
+                                            <th class="py-3">Especie / Etiqueta</th>
+                                            <th class="py-3">Ubicación</th>
+                                            <th class="py-3 text-center">Estado</th>
+                                            <th class="py-3 text-center ocultar-impresion">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tbody-arboles"></tbody>
+                                    <tbody id="tbody-arboles">
+                                        <tr><td colspan="6" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></td></tr>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -90,72 +110,143 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalNuevoArbol" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-header text-white" style="background-color: #009688;">
-                    <h5 class="modal-title font-weight-bold">Registrar Nuevo Exemplar</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+    <div class="modal fade" id="modalNuevoArbol" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-leaf mr-2"></i>Registrar Nuevo Ejemplar</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <form id="formAgregarArbol" enctype="multipart/form-data">
-                    <div class="modal-body p-4 bg-light">
+                    <div class="modal-body bg-light p-4">
                         <div class="row">
-                            <div class="col-md-5 border-right pr-4">
-                                <h6 class="font-weight-bold text-success mb-3 border-bottom pb-2">Datos de la Especie</h6>
-                                <div class="form-group">
-                                    <label class="small font-weight-bold">Nombre Comun</label>
-                                    <div class="input-group">
-                                        <input type="text" name="nombre_comun" class="form-control shadow-none" required />
+                            <div class="col-md-5 mb-3">
+                                <label class="font-weight-bold text-gray-800 small"><i class="fas fa-map-marker-alt text-danger mr-1"></i> Ubicación GPS (Haz clic en el mapa)</label>
+                                <div id="mapaSeleccion" class="mb-2 shadow-sm"></div>
+                                <div class="row">
+                                    <div class="col-6"><input type="text" id="lat" name="latitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Latitud" readonly required></div>
+                                    <div class="col-6"><input type="text" id="lng" name="longitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Longitud" readonly required></div>
+                                </div>
+                                <div class="mt-2 text-center p-2 bg-white rounded shadow-sm border">
+                                    <small class="text-muted d-block">Zona Detectada:</small>
+                                    <div id="zona-detectada-text" class="font-weight-bold">Esperando ubicación...</div>
+                                    <input type="hidden" name="id_sitio" id="id_sitio">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-7">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Código de Etiqueta (UTM)</label>
+                                    <input type="text" name="codigo_etiqueta" class="form-control form-control-solid rounded-pill" placeholder="Ej. UTM-045" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Nombre Común</label>
+                                    <div class="input-group shadow-sm rounded-pill">
+                                        <input type="text" name="nombre_comun" class="form-control border-0 rounded-left-pill bg-white" placeholder="Ej. Pino Michoacano" required>
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-info" id="btn-autocompletar"><i class="fas fa-search"></i></button>
+                                            <button type="button" id="btn-autocompletar" class="btn btn-primary rounded-right-pill px-3" title="Buscar Nombre Científico"><i class="fas fa-search"></i></button>
                                         </div>
                                     </div>
+                                    <small class="text-muted ml-2">Escribe el nombre y presiona buscar.</small>
                                 </div>
-                                <div class="form-group"><label class="small font-weight-bold">Nombre Cientifico</label><input type="text" name="nombre_cientifico" id="input-nombre-cientifico" class="form-control" /></div>
-                                <div class="form-group"><label class="small font-weight-bold">Descripcion (Automatica)</label><textarea name="descripcion" class="form-control" rows="3"></textarea></div>
-                                <div class="form-group"><label class="small font-weight-bold">Etiqueta / Codigo</label><input type="text" name="codigo_etiqueta" class="form-control" required /></div>
-                                <div class="form-group"><label class="small font-weight-bold text-info">Campana de Reforestacion</label><select name="id_reforestacion" class="form-control"><option value="">No (Arbol ya existente)</option></select></div>
-                                <div class="form-group"><label class="small font-weight-bold">Estado Inicial</label><select name="estado_salud" class="form-control"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select></div>
-                                <div class="form-group"><label class="small font-weight-bold">Fotografia Inicial</label><input type="file" name="foto" class="form-control-file border p-2 bg-white rounded" /></div>
-                            </div>
-                            <div class="col-md-7 pl-4">
-                                <h6 class="font-weight-bold text-info mb-3 border-bottom pb-2">Localizacion UTM</h6>
-                                <div class="card mb-3 shadow-sm border-left-info"><div class="card-body py-2"><label class="small font-weight-bold text-info mb-1">Zona Detectada:</label><h6 id="zona-detectada-text" class="mb-0 text-muted font-weight-bold">Esperando ubicacion...</h6></div></div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><label class="small font-weight-bold text-muted">Latitud</label><input type="text" name="latitud" id="lat" class="form-control form-control-sm bg-white" readonly required /></div>
-                                    <div class="col-6"><label class="small font-weight-bold text-muted">Longitud</label><input type="text" name="longitud" id="lng" class="form-control form-control-sm bg-white" readonly required /></div>
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Nombre Científico</label>
+                                    <input type="text" name="nombre_cientifico" class="form-control form-control-solid rounded-pill text-success font-italic" placeholder="Autocompletado...">
                                 </div>
-                                <div id="mapaSeleccion" class="shadow-sm"></div>
-                                <input type="hidden" name="id_sitio" id="id_sitio" required />
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-gray-800 small">Descripción Breve</label>
+                                    <textarea name="descripcion" class="form-control form-control-solid" rows="2" style="border-radius: 12px;"></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold text-gray-800 small">Estado de Salud</label>
+                                        <select name="estado_salud" class="form-control rounded-pill" required>
+                                            <option value="Bueno">Bueno</option>
+                                            <option value="Regular">Regular</option>
+                                            <option value="Malo">Malo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold text-gray-800 small">Campaña de Reforestación</label>
+                                        <select name="id_reforestacion" class="form-control rounded-pill border-success text-success font-weight-bold">
+                                            </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-0 mt-2">
+                                    <label class="font-weight-bold text-gray-800 small"><i class="fas fa-camera mr-1"></i> Fotografía del Ejemplar (Evidencia inicial)</label>
+                                    <input type="file" name="foto" class="form-control-file border p-2 rounded bg-white" accept="image/*">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-white border-top"><button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Cerrar</button><button type="submit" class="btn btn-success px-5 rounded-pill font-weight-bold shadow-sm">Guardar Arbol</button></div>
+                    <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-light">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-utm rounded-pill px-5 font-weight-bold shadow-sm">Registrar Árbol en BD</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modalEditarArbol" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-header text-white bg-warning">
-                    <h5 class="modal-title font-weight-bold text-dark">Editar Informacion General</h5>
-                    <button type="button" class="close text-dark" data-dismiss="modal"><span>&times;</span></button>
+    <div class="modal fade" id="modalEditarArbol" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Datos del Árbol</h5>
+                    <button type="button" class="close text-dark" data-dismiss="modal">&times;</button>
                 </div>
                 <form id="formEditarArbol">
+                    <input type="hidden" name="id_arbol" id="edit-id_arbol">
                     <div class="modal-body p-4 bg-light">
-                        <input type="hidden" name="id_arbol" id="edit-id_arbol">
-                        <div class="form-group"><label class="small font-weight-bold">Etiqueta / Codigo</label><input type="text" name="codigo_etiqueta" id="edit-codigo" class="form-control" required /></div>
-                        <div class="form-group"><label class="small font-weight-bold">Nombre Comun</label><input type="text" name="nombre_comun" id="edit-comun" class="form-control" required /></div>
-                        <div class="form-group"><label class="small font-weight-bold">Nombre Cientifico</label><input type="text" name="nombre_cientifico" id="edit-cientifico" class="form-control" /></div>
-                        <div class="form-group"><label class="small font-weight-bold">Descripcion</label><textarea name="descripcion" id="edit-desc" class="form-control" rows="2"></textarea></div>
                         <div class="row">
-                            <div class="col-6"><label class="small font-weight-bold">Latitud (Manual)</label><input type="text" name="latitud" id="edit-lat" class="form-control" required /></div>
-                            <div class="col-6"><label class="small font-weight-bold">Longitud (Manual)</label><input type="text" name="longitud" id="edit-lng" class="form-control" required /></div>
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Código / Etiqueta</label>
+                                <input type="text" name="codigo_etiqueta" id="edit-codigo" class="form-control rounded-pill" required>
+                            </div>
+                            
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700 text-danger">Nuevo Estado de Salud</label>
+                                <select name="estado_salud" id="edit-estado" class="form-control rounded-pill border-danger text-danger font-weight-bold">
+                                    <option value="">-- No actualizar estado --</option>
+                                    <option value="Bueno">Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Malo">Malo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Nombre Común</label>
+                                <input type="text" name="nombre_comun" id="edit-comun" class="form-control rounded-pill" required>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="small font-weight-bold text-gray-700">Nombre Científico</label>
+                                <input type="text" name="nombre_cientifico" id="edit-cientifico" class="form-control rounded-pill font-italic">
+                            </div>
+                            <div class="col-md-12 form-group">
+                                <label class="small font-weight-bold text-gray-700">Descripción</label>
+                                <textarea name="descripcion" id="edit-desc" class="form-control" style="border-radius: 10px;" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">Latitud</label>
+                                <input type="text" name="latitud" id="edit-lat" class="form-control form-control-sm text-center" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">Longitud</label>
+                                <input type="text" name="longitud" id="edit-lng" class="form-control form-control-sm text-center" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="small font-weight-bold text-gray-700">ID Zona</label>
+                                <input type="number" name="id_sitio" id="edit-sitio" class="form-control form-control-sm text-center" placeholder="Ej: 2">
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-white border-top"><button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-warning px-5 rounded-pill font-weight-bold text-dark shadow-sm">Actualizar Datos</button></div>
+                    <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-white">
+                        <button type="submit" class="btn btn-warning rounded-pill px-5 font-weight-bold text-dark shadow-sm">
+                            Guardar Cambios
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -163,8 +254,10 @@
 
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
     <script src="js/inventario-logic.js"></script>
 </body>
 </html>
