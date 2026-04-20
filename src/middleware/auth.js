@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-// Clave secreta para firmar los tokens (en producción esto debe ir en un archivo .env)
-const SECRET_KEY = 'ArboMap_UTM_Secret_Key_2026';
+const SECRET_KEY = process.env.JWT_SECRET;
 
 exports.verifyToken = (req, res, next) => {
     // 1. Buscar el token en los encabezados de la petición
@@ -24,4 +23,17 @@ exports.verifyToken = (req, res, next) => {
     }
 };
 
+// Candado de seguridad por roles
+exports.isAdmin = (req, res, next) => {
+    // Como este middleware se ejecuta DESPUÉS de verifyToken, req.user ya existe
+    if (req.user.rol !== 1) {
+        return res.status(403).json({ 
+            success: false, 
+            message: 'Acceso denegado. Esta acción requiere privilegios de Administrador.' 
+        });
+    }
+    next(); // Si es rol 1, lo dejamos pasar
+};
+
 exports.SECRET_KEY = SECRET_KEY;
+

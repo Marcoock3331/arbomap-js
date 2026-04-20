@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -11,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.redirect('/login.html');
+    res.redirect('/inicio.html');
 });
 
 app.use(express.static(path.join(__dirname, 'public')));

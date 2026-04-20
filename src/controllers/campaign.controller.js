@@ -98,3 +98,21 @@ exports.deleteCampaign = async (req, res) => {
         res.status(500).json({ success: false });
     }
 };
+
+// Función para eliminar Propuestas
+exports.deleteProposal = async (req, res) => {
+    try {
+        const id_propuesta = req.params.id;
+        const [result] = await db.query('DELETE FROM propuesta_reforestacion WHERE id_propuesta = ?', [id_propuesta]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Propuesta no encontrada.' });
+        }
+
+        res.json({ success: true, message: 'Propuesta eliminada.' });
+
+    } catch (error) {
+        console.error("Error al eliminar propuesta:", error);
+        res.status(500).json({ success: false, message: 'Error interno al eliminar.' });
+    }
+};

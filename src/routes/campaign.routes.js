@@ -5,6 +5,8 @@ const campaignController = require('../controllers/campaign.controller');
 router.get('/', campaignController.getAllCampaigns);
 router.post('/', campaignController.createProposal);
 router.get('/active', campaignController.getActiveCampaigns);
+router.delete('/proposal/:id', campaignController.deleteProposal);
+
 router.get('/:id', campaignController.getCampaignById);
 router.put('/:id', campaignController.updateCampaign);
 router.delete('/:id', campaignController.deleteCampaign);

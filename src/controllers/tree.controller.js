@@ -17,6 +17,7 @@ exports.getStats = async (req, res) => {
                        ROW_NUMBER() OVER(PARTITION BY id_arbol ORDER BY fecha_revision DESC) as rn
                 FROM seguimiento
             ) seg ON a.id_arbol = seg.id_arbol AND seg.rn = 1
+            ORDER BY a.id_arbol DESC
         `);
         
         const totalSanos = mapa.filter(a => a.estado === 'Bueno').length;
@@ -40,7 +41,7 @@ exports.createTree = async (req, res) => {
 
         const [result] = await conn.query('INSERT INTO arbol (codigo_etiqueta, latitud, longitud, fecha_plantado, id_especie, id_reforestacion) VALUES (?,?,?,CURDATE(),?,?)', [codigo_etiqueta, latitud, longitud, id_esp, ref_id]);
         
-        await conn.query('INSERT INTO seguimiento (estado_salud, comentarios, foto_url, id_arbol, id_usuario) VALUES (?, ?, ?, ?, ?)', [estado_salud, 'Registro inicial', req.file ? req.file.filename : null, result.insertId, id_usuario || 1]);
+        await conn.query('INSERT INTO seguimiento (estado_salud, comentarios, foto_url, id_arbol, id_usuario) VALUES (?, ?, ?, ?, ?)', [estado_salud, 'Registro inicial', req.file ? req.file.filename : null, result.insertId, req.user.id_usuario]);
 
         await conn.commit();
         res.json({ success: true });
@@ -105,10 +106,13 @@ exports.deleteTree = async (req, res) => {
 exports.getTreeByTag = async (req, res) => {
     try {
         const [arbol] = await db.query(`
-            SELECT a.*, e.nombre_comun, e.nombre_cientifico, e.descripcion, s.nombre_zona
+            SELECT a.*, e.nombre_comun, e.nombre_cientifico, e.descripcion, s.nombre_zona,
+                   u.nombre_completo as nombre_cuidador, ac.fecha_asignacion
             FROM arbol a
             JOIN especie e ON a.id_especie = e.id_especie
             LEFT JOIN sitio s ON a.id_sitio = s.id_sitio
+            LEFT JOIN arbol_cuidador ac ON a.id_arbol = ac.id_arbol
+            LEFT JOIN usuario u ON ac.id_usuario = u.id_usuario
             WHERE a.codigo_etiqueta = ?
         `, [req.params.codigo]);
 
@@ -130,5 +134,29 @@ exports.adoptTree = async (req, res) => {
     } catch (e) {
         console.error(e);
         res.status(500).json({ success: false });
+    }
+};
+
+exports.releaseTree = async (req, res) => {
+    try {
+        // Obtenemos el ID del árbol desde la URL y el usuario desde el token JWT
+        const id_arbol = req.params.id;
+        const id_usuario = req.user.id_usuario;
+
+        // Borramos estrictamente la relación entre ESE usuario y ESE árbol
+        const [result] = await db.query(
+            'DELETE FROM arbol_cuidador WHERE id_arbol = ? AND id_usuario = ?', 
+            [id_arbol, id_usuario]
+        );
+
+        // Si no se borró nada, significa que el usuario no era el padrino de ese árbol
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ success: false, message: 'No puedes liberar un árbol que no te pertenece.' });
+        }
+
+        res.json({ success: true, message: 'Árbol liberado correctamente. Ahora está disponible para otro voluntario.' });
+    } catch (e) {
+        console.error("Error al liberar árbol:", e);
+        res.status(500).json({ success: false, message: 'Error interno del servidor al liberar el árbol.' });
     }
 };

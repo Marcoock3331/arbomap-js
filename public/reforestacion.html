@@ -80,26 +80,53 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalPropuesta" tabindex="-1" role="dialog">
+    <div class="modal fade" id="modalPropuesta" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-                <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
-                    <h5 class="modal-title font-weight-bold">Proponer Reforestación</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                
+                <div class="modal-header text-white border-0 py-3" style="background-color: #009688;">
+                    <h5 class="modal-title font-weight-bold" style="font-size: 1.25rem;">
+                        <i class="fas fa-seedling mr-2"></i> Proponer Reforestación
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar" style="opacity: 0.8;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
+
                 <form id="formPropuesta">
-                    <div class="modal-body p-4">
-                        <div class="form-group">
-                            <label class="small font-weight-bold text-gray-700">Nombre de la Propuesta</label>
-                            <input type="text" name="nombre_propuesta" class="form-control rounded-pill border-light bg-light" required>
+                    <div class="modal-body p-4 bg-white">
+                        
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-gray-700 small text-uppercase mb-2">Nombre de la Propuesta</label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0" style="border-color: #e3e6f0;">
+                                        <i class="fas fa-file-signature text-success"></i>
+                                    </span>
+                                </div>
+                                <input type="text" name="nombre_propuesta" class="form-control border-left-0 pl-0" placeholder="Ej. Campaña Primavera 2026" style="border-color: #e3e6f0; background-color: #f8f9fc;" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="small font-weight-bold text-gray-700">Cantidad de Árboles (Meta)</label>
-                            <input type="number" name="cantidad_meta" class="form-control rounded-pill border-light bg-light" required>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold text-gray-700 small text-uppercase mb-2">Cantidad de Árboles (Meta)</label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0" style="border-color: #e3e6f0;">
+                                        <i class="fas fa-tree text-success"></i>
+                                    </span>
+                                </div>
+                                <input type="number" name="cantidad_meta" class="form-control border-left-0 pl-0" placeholder="Ej. 50" min="1" style="border-color: #e3e6f0; background-color: #f8f9fc;" required>
+                            </div>
                         </div>
+
                     </div>
-                    <div class="modal-footer border-0 d-flex justify-content-center pb-4">
-                        <button type="submit" class="btn btn-success-utm rounded-pill px-5 font-weight-bold shadow-sm">Enviar Propuesta</button>
+
+                    <div class="modal-footer border-top-0 bg-light justify-content-between py-3 px-4">
+                        <button type="button" class="btn btn-outline-secondary font-weight-bold rounded-pill px-4" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success font-weight-bold rounded-pill px-4 shadow-sm" style="background-color: #009688; border-color: #009688;">
+                            <i class="fas fa-paper-plane mr-2"></i> Enviar Propuesta
+                        </button>
                     </div>
                 </form>
             </div>
