@@ -11,6 +11,14 @@ exports.getAllCampaigns = async (req, res) => {
             LEFT JOIN reforestacion r ON p.id_propuesta = r.id_propuesta
             LEFT JOIN sitio s ON r.id_sitio = s.id_sitio
         `);
+        
+        // Auto-Completar si se cumple la meta
+        rows.forEach(r => {
+            if (r.cantidad_plantada >= r.cantidad_meta) {
+                r.estado = 'Completada';
+            }
+        });
+        
         res.json(rows);
     } catch (e) {
         console.error(e);
@@ -31,6 +39,11 @@ exports.getCampaignById = async (req, res) => {
     try {
         const [camp] = await db.query('SELECT p.nombre_propuesta, p.cantidad_meta, r.*, s.nombre_zona FROM reforestacion r JOIN propuesta_reforestacion p ON r.id_propuesta = p.id_propuesta LEFT JOIN sitio s ON r.id_sitio = s.id_sitio WHERE r.id_reforestacion = ?', [req.params.id]);
         if(camp.length === 0) return res.status(404).json({ error: 'Campaña no encontrada' });
+        
+        // Auto-Completar si se cumple la meta en la vista de detalle
+        if (camp[0].cantidad_plantada >= camp[0].cantidad_meta) {
+            camp[0].estado = 'Completada';
+        }
 
         const [arboles] = await db.query(`
             SELECT a.*, e.nombre_comun, e.nombre_cientifico, seg.estado_salud as estado_actual 
@@ -38,12 +51,11 @@ exports.getCampaignById = async (req, res) => {
             JOIN especie e ON a.id_especie = e.id_especie 
             LEFT JOIN (
                 SELECT id_arbol, estado_salud,
-                       ROW_NUMBER() OVER(PARTITION BY id_arbol ORDER BY fecha_revision DESC) as rn
+                ROW_NUMBER() OVER(PARTITION BY id_arbol ORDER BY fecha_revision DESC) as rn
                 FROM seguimiento
             ) seg ON a.id_arbol = seg.id_arbol AND seg.rn = 1
             WHERE a.id_reforestacion = ?
         `, [req.params.id]);
-        
         res.json({ campana: camp[0], arboles });
     } catch (e) {
         console.error(e);
@@ -62,7 +74,6 @@ exports.createProposal = async (req, res) => {
     }
 };
 
-// MODIFICADO: Ahora el admin puede definir punto de reunión y cupo al aprobar
 exports.approveCampaign = async (req, res) => {
     try {
         const { id_sitio, fecha_evento, cantidad_esperada, punto_reunion, cupo_maximo } = req.body;
@@ -114,8 +125,9 @@ exports.deleteProposal = async (req, res) => {
     }
 };
 
-
-// Voluntario se une a la campaña
+// =====================================
+// VOLUNTARIOS EN EVENTO
+// =====================================
 exports.joinCampaign = async (req, res) => {
     try {
         const id_reforestacion = req.params.id;
@@ -123,9 +135,8 @@ exports.joinCampaign = async (req, res) => {
 
         const [[campana]] = await db.query('SELECT cupo_maximo FROM reforestacion WHERE id_reforestacion = ?', [id_reforestacion]);
         if (!campana) return res.status(404).json({ message: 'Campaña activa no encontrada.' });
-
         const [[inscritos]] = await db.query('SELECT COUNT(*) as total FROM reforestacion_voluntarios WHERE id_reforestacion = ?', [id_reforestacion]);
-
+        
         if (inscritos.total >= campana.cupo_maximo) {
             return res.status(400).json({ message: 'Lo sentimos, el cupo para este evento ya está lleno.' });
         }
@@ -139,33 +150,24 @@ exports.joinCampaign = async (req, res) => {
     }
 };
 
-// Admin ve quién se inscribi
 exports.getVolunteers = async (req, res) => {
     try {
         const [voluntarios] = await db.query(`
-            SELECT 
-                rv.id_registro, 
-                rv.asistio, 
-                u.nombre_completo, 
-                u.matricula
+            SELECT rv.id_registro, rv.asistio, u.nombre_completo, u.email, u.id_usuario as matricula
             FROM reforestacion_voluntarios rv
             JOIN usuario u ON rv.id_usuario = u.id_usuario
             WHERE rv.id_reforestacion = ?
         `, [req.params.id]);
-
         res.json(voluntarios);
-
     } catch (e) {
-        console.error("Error SQL en getVolunteers:", e); 
+        console.error("Error SQL en getVolunteers:", e);
         res.status(500).json({ error: 'Error al obtener voluntarios' });
     }
 };
 
-// Admin marca asistencia
 exports.checkInVolunteer = async (req, res) => {
     try {
         if (req.user.rol !== 1) return res.status(403).json({ message: 'Solo admin puede pasar lista.' });
-        
         const { asistio } = req.body;
         await db.query('UPDATE reforestacion_voluntarios SET asistio = ? WHERE id_registro = ?', [asistio, req.params.idRegistro]);
         res.json({ success: true });

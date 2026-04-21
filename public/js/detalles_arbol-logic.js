@@ -1,5 +1,4 @@
 let miniMapa;
-
 document.addEventListener('DOMContentLoaded', async () => {
     const sidebarContainer = document.getElementById('sidebar-container');
     const mostrarPagina = () => document.body.classList.add('listo');
@@ -39,8 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.reset();
                 ApiService.toast('success', '¡Reporte clínico guardado!');
                 cargarExpediente(etiqueta);
-            } catch (err) {
-                // El error lo maneja automáticamente ApiService.toast
+            } catch (err) { 
+                // PARCHE ANTICONGELAMIENTO: Cerramos el modal a la fuerza 
+                $('#modalSeguimiento').modal('hide');
+                this.reset();
+                cargarExpediente(etiqueta);
             }
         });
     }
@@ -61,8 +63,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 $('#modalEditarReporte').modal('hide');
                 ApiService.toast('success', 'Reporte actualizado correctamente.');
                 cargarExpediente(etiqueta);
-            } catch (err) {
-                // Error manejado por ApiService
+            } catch (err) { 
+                $('#modalEditarReporte').modal('hide');
+                cargarExpediente(etiqueta);
             }
         });
     }
@@ -73,6 +76,10 @@ async function cargarExpediente(codigo) {
         const data = await ApiService.get(`/trees/tag/${codigo}`);
         const a = data.arbol;
         const reportes = data.historial;
+        
+        // Identificar rol para permisos
+        const sessionData = JSON.parse(sessionStorage.getItem('user'));
+        const isAdmin = sessionData && sessionData.id_rol === 1;
 
         const inputIDArbolModal = document.getElementById('inputIDArbolModal');
         if (inputIDArbolModal) inputIDArbolModal.value = a.id_arbol;
@@ -98,7 +105,7 @@ async function cargarExpediente(codigo) {
             let fAdopcion = new Date(a.fecha_asignacion);
             fAdopcion.setMinutes(fAdopcion.getMinutes() + fAdopcion.getTimezoneOffset());
             document.getElementById('det-fecha-adopcion').innerText = "Desde: " + fAdopcion.toLocaleDateString();
-            areaAdopcion.innerHTML = ''; 
+            areaAdopcion.innerHTML = '';
         } else {
             document.getElementById('det-cuidador').innerText = 'Sin asignar';
             document.getElementById('det-fecha-adopcion').innerText = '---';
@@ -137,10 +144,23 @@ async function cargarExpediente(codigo) {
                 fRevision.setMinutes(fRevision.getMinutes() + fRevision.getTimezoneOffset());
 
                 const safeComentarios = (r.comentarios ?? '').replace(/'/g, "\\'");
-                let acciones = `<button class="btn btn-sm btn-outline-warning shadow-sm mx-1" onclick="abrirModalEditarReporte(${r.id_seguimiento}, '${r.estado_salud}', '${safeComentarios}')"><i class="fas fa-edit"></i></button>`;
                 
+                // SISTEMA DE PERMISOS CORREGIDO
+                let acciones = '';
                 if (r.comentarios !== 'Registro inicial') {
-                    acciones += `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarReporte(${r.id_seguimiento})"><i class="fas fa-trash"></i></button>`;
+                    if (isAdmin) {
+                        // Admin: Solo puede eliminar
+                        acciones = `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarReporte(${r.id_seguimiento})" title="Eliminar Reporte"><i class="fas fa-trash"></i></button>`;
+                    } else {
+                        // Voluntario: Puede editar y eliminar para corregir sus errores
+                        acciones = `
+                            <button class="btn btn-sm btn-outline-warning shadow-sm mx-1" onclick="abrirModalEditarReporte(${r.id_seguimiento}, '${r.estado_salud}', '${safeComentarios}')" title="Editar Reporte"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarReporte(${r.id_seguimiento})" title="Eliminar Reporte"><i class="fas fa-trash"></i></button>
+                        `;
+                    }
+                } else {
+                    // Registro inicial blindado
+                    acciones = `<span class="badge badge-light text-muted border px-2 py-1"><i class="fas fa-lock mr-1"></i>Inicial</span>`;
                 }
 
                 contenedor.innerHTML += `
@@ -162,14 +182,12 @@ async function cargarExpediente(codigo) {
     }
 }
 
-// ==========================================
-// ACCIONES CON SWEETALERT2 (UX MEJORADA)
-// ==========================================
-
 window.adoptarArbol = async function(idArbol) {
+    if(!idArbol) return ApiService.toast('error', 'Error: No se encontró el ID del árbol');
+
     const result = await Swal.fire({
         title: '¿Quieres ser su padrino?',
-        text: "Te comprometes a cuidar este árbol y registrar su salud periódicamente en la UTM.",
+        text: "Te comprometes a cuidar este árbol y registrar su salud periódicamente.",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#009688',
@@ -178,7 +196,6 @@ window.adoptarArbol = async function(idArbol) {
         cancelButtonText: 'Ahora no',
         reverseButtons: true
     });
-
     if (!result.isConfirmed) return;
 
     try {
@@ -188,7 +205,7 @@ window.adoptarArbol = async function(idArbol) {
         Swal.fire('¡Felicidades!', 'Ahora eres oficialmente el padrino de este árbol.', 'success');
         const etiqueta = new URLSearchParams(window.location.search).get('id');
         cargarExpediente(etiqueta);
-    } catch (err) { /* Manejado por ApiService */ }
+    } catch (err) { }
 };
 
 window.eliminarReporte = async function(id) {
@@ -201,7 +218,6 @@ window.eliminarReporte = async function(id) {
         confirmButtonText: 'Sí, borrar',
         cancelButtonText: 'Cancelar'
     });
-
     if (!result.isConfirmed) return;
 
     try {
@@ -209,7 +225,7 @@ window.eliminarReporte = async function(id) {
         ApiService.toast('success', 'Reporte eliminado.');
         const etiqueta = new URLSearchParams(window.location.search).get('id');
         cargarExpediente(etiqueta);
-    } catch (e) { /* Manejado por ApiService */ }
+    } catch (e) { }
 };
 
 window.abrirModalEditarReporte = function(id, estado, comentarios) {

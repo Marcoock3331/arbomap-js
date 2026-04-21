@@ -6,6 +6,7 @@ let poligonosZonas = [];
 document.addEventListener('DOMContentLoaded', () => {
     const sidebarContainer = document.getElementById('sidebar-container');
     const cachedSidebar = sessionStorage.getItem('sidebarHTML');
+    
     if (cachedSidebar) {
         sidebarContainer.innerHTML = cachedSidebar;
         document.body.classList.add('listo');
@@ -15,6 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebarContainer.innerHTML = html;
             setTimeout(() => { document.body.classList.add('listo'); }, 10);
         });
+    }
+
+    // --- BLOQUEO DE SEGURIDAD VISUAL (BOTÓN AGREGAR) ---
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    const isAdmin = user && user.id_rol === 1;
+    
+    // Si no es admin, ocultamos el botón de "Agregar Árbol" que abre el modal
+    if (!isAdmin) {
+        const btnAgregar = document.querySelector('[data-target="#modalNuevoArbol"]');
+        if (btnAgregar) btnAgregar.style.display = 'none';
     }
 
     cargarTablaInventario();
@@ -29,8 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         try {
             const formData = new FormData(this);
-            const sessionData = JSON.parse(sessionStorage.getItem('user'));
-            if(sessionData) formData.append('id_usuario', sessionData.id_usuario);
+            if(user) formData.append('id_usuario', user.id_usuario);
 
             await ApiService.post('/trees', formData);
             
@@ -40,9 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('zona-detectada-text').innerText = 'Esperando ubicación...';
             ApiService.toast('success', '¡Árbol registrado con éxito!');
             cargarTablaInventario();
-        } catch (err) { 
-            // El error lo maneja ApiService
-        } 
+        } catch (err) { } 
     });
 
     // Editar árbol
@@ -64,6 +72,9 @@ function renderizarTabla(arboles) {
     const tbody = document.getElementById('tbody-arboles');
     tbody.innerHTML = '';
     
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    const isAdmin = user && user.id_rol === 1;
+
     if(arboles.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 font-italic text-muted">No se encontraron árboles.</td></tr>';
         return;
@@ -74,10 +85,34 @@ function renderizarTabla(arboles) {
         let foto = a.foto_actual ? `/uploads/${a.foto_actual}` : 'https://cdn-icons-png.flaticon.com/512/10521/10521236.png';
         let zonaNombre = a.nombre_zona ? a.nombre_zona : 'Sin zona asignada';
         
+        // --- LÓGICA DINÁMICA DE ACCIONES ---
+        // El "ojito" lo ven todos
+        let acciones = `
+            <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" 
+               class="btn btn-sm btn-outline-info rounded-circle shadow-sm" 
+               title="Ver Expediente">
+               <i class="fas fa-eye"></i>
+            </a>
+        `;
+
+        // El botón de Editar y Borrar SOLO lo ve el Admin
+        if (isAdmin) {
+            acciones += `
+                <button class="btn btn-sm btn-outline-warning rounded-circle shadow-sm mx-1" 
+                        onclick="abrirModalEditar(${a.id_arbol})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" 
+                        onclick="eliminarArbol(${a.id_arbol})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                </button>
+            `;
+        }
+        
         tbody.innerHTML += `
             <tr class="border-bottom animate__animated animate__fadeIn">
                  <td class="pl-3 font-weight-bold text-muted align-middle">${a.id_arbol || (i+1)}</td>
-                <td class="align-middle"><img src="${foto}" class="img-arbol-tabla shadow-sm border"></td>
+                <td class="align-middle"><img src="${foto}" class="img-arbol-tabla shadow-sm border" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"></td>
                 <td class="align-middle">
                     <div class="font-weight-bold text-success" style="font-size: 1.05rem;">${a.nombre_comun}</div>
                     <div class="small text-muted mb-1">${a.nombre_cientifico || 'Sin registro'}</div>
@@ -86,9 +121,7 @@ function renderizarTabla(arboles) {
                 <td class="align-middle"><div class="font-weight-bold text-dark">${zonaNombre}</div><small class="text-info"><i class="fas fa-map-marker-alt mr-1"></i>${a.latitud}, ${a.longitud}</small></td>
                 <td class="align-middle text-center"><span class="badge badge-${badge} px-3 py-2 rounded-pill shadow-none">${a.estado || 'N/A'}</span></td>
                 <td class="text-center align-middle ocultar-impresion">
-                    <a href="detalles_arbol.html?id=${a.codigo_etiqueta}" class="btn btn-sm btn-outline-info rounded-circle shadow-sm" title="Ver Expediente"><i class="fas fa-eye"></i></a>
-                    <button class="btn btn-sm btn-outline-warning rounded-circle shadow-sm mx-1" onclick="abrirModalEditar(${a.id_arbol})" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" onclick="eliminarArbol(${a.id_arbol})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    ${acciones}
                 </td>
             </tr>`;
     });
@@ -110,8 +143,10 @@ async function cargarTablaInventario() {
         const data = await ApiService.get('/trees/stats');
         todosLosArboles = data.arboles;
         const sel = document.getElementById('filtro-zona');
-        sel.innerHTML = '<option value="Todas">Todas las Zonas</option>';
-        [...new Set(data.arboles.map(x => x.nombre_zona).filter(z => z))].forEach(z => sel.innerHTML += `<option value="${z}">${z}</option>`);
+        if (sel) {
+            sel.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+            [...new Set(data.arboles.map(x => x.nombre_zona).filter(z => z))].forEach(z => sel.innerHTML += `<option value="${z}">${z}</option>`);
+        }
         renderizarTabla(todosLosArboles);
     } catch (e) { }
 }
@@ -154,7 +189,8 @@ window.eliminarArbol = async function(id) {
         confirmButtonColor: '#e74a3b',
         cancelButtonColor: '#858796',
         confirmButtonText: 'Sí, borrar definitivamente',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
     });
 
     if(!result.isConfirmed) return;
@@ -191,7 +227,8 @@ function evaluarPoligonos(lat, lng) {
         }
     }
     if(!zonaDetectada) {
-        document.getElementById('id_sitio').value = "";
+        const idSitioInput = document.getElementById('id_sitio');
+        if (idSitioInput) idSitioInput.value = "";
         document.getElementById('zona-detectada-text').innerHTML = `<span class="text-danger font-weight-bold animate__animated animate__headShake"><i class="fas fa-exclamation-triangle mr-1"></i>Fuera de zona UTM registrada</span>`;
     }
 }
@@ -227,7 +264,7 @@ $('#modalNuevoArbol').on('shown.bs.modal', async function () {
     }
 });
 
-// NUEVA FUNCIÓN: Obtener GPS del Dispositivo
+// Obtener GPS del Dispositivo
 window.obtenerCoordenadasGPS = function() {
     if (!navigator.geolocation) {
         return ApiService.toast('warning', 'Tu dispositivo no soporta GPS.');
@@ -241,22 +278,18 @@ window.obtenerCoordenadasGPS = function() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            // Actualizamos los inputs manualmente
             const latInput = document.getElementById('lat');
             const lngInput = document.getElementById('lng');
             latInput.value = lat.toFixed(6);
             lngInput.value = lng.toFixed(6);
             
-            // Efecto visual para que el usuario note el cambio
             latInput.classList.add('animate__animated', 'animate__flash');
             lngInput.classList.add('animate__animated', 'animate__flash');
             
-            // Actualizamos el mapa
             if (markerRegistro) mapRegistro.removeLayer(markerRegistro);
             markerRegistro = L.marker([lat, lng]).addTo(mapRegistro);
-            mapRegistro.setView([lat, lng], 18); // Hacemos zoom donde está el usuario
+            mapRegistro.setView([lat, lng], 18); 
 
-            // Evaluamos en qué zona UTM está parado
             evaluarPoligonos(lat, lng);
             ApiService.toast('success', '¡GPS Localizado!');
         },
@@ -305,7 +338,6 @@ document.getElementById('btn-autocompletar').addEventListener('click', async () 
             ApiService.toast('warning', 'No se encontraron resultados en la BD botánica.');
         }
     } catch (e) {
-        // Ignorar error y dejar que el usuario escriba a mano
     } finally {
         btn.innerHTML = '<i class="fas fa-search"></i>'; btn.disabled = false;
         setTimeout(() => {

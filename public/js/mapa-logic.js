@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         html: '<i class="fas fa-tree tree-green" style="color: #2e7d32; font-size: 22px;"></i>',
         className: 'custom-tree', iconSize: [20, 20], iconAnchor: [10, 20]
     });
-    
+
     const iconOcupado = L.divIcon({
         html: '<i class="fas fa-tree tree-gold" style="color: #d4af37; font-size: 22px;"></i>',
         className: 'custom-tree', iconSize: [20, 20], iconAnchor: [10, 20]
@@ -86,7 +86,7 @@ function mostrarInfoArbol(a) {
     const isVoluntario = user && user.id_rol === 2;
 
     let seccionApadrinamiento = '';
-    
+
     if (a.padrino) {
         // Árbol ya ocupado
         seccionApadrinamiento = `<div class="alert alert-warning p-2 mt-3 mb-0 small font-weight-bold shadow-sm" style="border-radius: 8px;"><i class="fas fa-medal text-warning mr-2"></i>Apadrinado por: <span class="text-dark">${a.padrino}</span></div>`;
@@ -99,9 +99,11 @@ function mostrarInfoArbol(a) {
         }
     }
 
+    // APLICADA SOLUCIÓN PARA LA FOTO EXPANDIBLE CON EL ONCLICK MAGICO Y CURSOR DE LUPA
     document.getElementById('info-panel').innerHTML = `
         <div class="text-center animate__animated animate__fadeIn">
-            <img src="${fot}" class="img-fluid rounded border mb-3 shadow-sm" style="height:200px; width:100%; object-fit:cover;">
+            <img src="${fot}" class="img-fluid rounded border mb-3 shadow-sm" style="height:200px; width:100%; object-fit:cover; cursor: zoom-in; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" onclick="Swal.fire({ imageUrl: this.src, imageAlt: 'Foto del árbol', showConfirmButton: false, width: 'auto', background: 'transparent' })" title="Clic para expandir foto">
+            
             <h4 class="font-weight-bold text-success">${a.nombre_comun}</h4>
             <span class="badge badge-${bad} px-3 py-2 mb-3 shadow-sm">${a.estado || 'N/A'}</span>
             
@@ -129,7 +131,7 @@ function mostrarInfoZona(z) {
 }
 
 // ==========================================
-// NUEVO: FUNCIÓN PARA APADRINAR DESDE EL MAPA
+// NUEVO: FUNCIÓN PARA APADRINAR DESDE EL MAPA (CON RUTA CORREGIDA)
 // ==========================================
 window.adoptarArbolEnMapa = async function(id_arbol, nombre_comun) {
     const result = await Swal.fire({
@@ -148,16 +150,14 @@ window.adoptarArbolEnMapa = async function(id_arbol, nombre_comun) {
     try {
         const user = JSON.parse(sessionStorage.getItem('user'));
         
-        // Llamada al backend para adoptar
-        await ApiService.post('/trees/adopt', { 
-            id_arbol: id_arbol, 
+        // CORRECCIÓN DEL 404: Se incrusta el ID en la URL de forma RESTful
+        await ApiService.post(`/trees/${id_arbol}/adopt`, { 
             id_usuario: user.id_usuario 
         });
         
         ApiService.toast('success', '¡Gracias por unirte a la causa! Recarga la página para ver tu árbol dorado.');
         setTimeout(() => location.reload(), 2000);
-        
     } catch (e) {
-        // Error manejado por ApiService
+        // Error manejado por ApiService visualmente
     }
 };

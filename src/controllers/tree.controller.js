@@ -5,7 +5,6 @@ exports.getStats = async (req, res) => {
         const [total] = await db.query('SELECT COUNT(*) as t FROM arbol');
         const [esp] = await db.query('SELECT COUNT(DISTINCT id_especie) as t FROM arbol');
         
-        // OPTIMIZACIÓN Y NUEVA LÓGICA: Traemos al padrino usando JOINs
         const [mapa] = await db.query(`
             SELECT a.*, e.nombre_comun, e.nombre_cientifico, s.nombre_zona, 
                    seg.estado_salud as estado, seg.foto_url as foto_actual,
@@ -44,13 +43,17 @@ exports.createTree = async (req, res) => {
 
         const [result] = await conn.query('INSERT INTO arbol (codigo_etiqueta, latitud, longitud, fecha_plantado, id_especie, id_reforestacion) VALUES (?,?,?,CURDATE(),?,?)', [codigo_etiqueta, latitud, longitud, id_esp, ref_id]);
         
-        await conn.query('INSERT INTO seguimiento (estado_salud, comentarios, foto_url, id_arbol, id_usuario) VALUES (?, ?, ?, ?, ?)', [estado_salud, 'Registro inicial', req.file ? req.file.filename : null, result.insertId, req.user.id_usuario]);
+        // EXTRACCIÓN SEGURA (Anticrash)
+        const userId = (req.user && req.user.id_usuario) ? req.user.id_usuario : id_usuario;
+        const fotoName = req.file ? req.file.filename : null;
+
+        await conn.query('INSERT INTO seguimiento (estado_salud, comentarios, foto_url, id_arbol, id_usuario) VALUES (?, ?, ?, ?, ?)', [estado_salud, 'Registro inicial', fotoName, result.insertId, userId]);
 
         await conn.commit();
         res.json({ success: true });
     } catch (e) {
         await conn.rollback();
-        console.error(e);
+        console.error("Error al crear árbol:", e);
         res.status(500).json({ success: false, message: 'Error al registrar árbol' });
     } finally {
         conn.release();
@@ -101,7 +104,7 @@ exports.deleteTree = async (req, res) => {
         await db.query('DELETE FROM arbol WHERE id_arbol = ?', [req.params.id]);
         res.json({ success: true });
     } catch (e) {
-        console.error(e);
+        console.error("Error al eliminar árbol:", e);
         res.status(500).json({ success: false });
     }
 };
@@ -129,14 +132,9 @@ exports.getTreeByTag = async (req, res) => {
     }
 };
 
-// ==========================================
-// NUEVO: Adopción ajustada para funcionar con el mapa
-// ==========================================
 exports.adoptTree = async (req, res) => {
     try {
-        // Extraemos el id_arbol e id_usuario del body
         const { id_arbol, id_usuario } = req.body;
-        // Respaldo por si mandaron el id_arbol en la URL
         const arbolId = id_arbol || req.params.id;
 
         await db.query('INSERT INTO arbol_cuidador (id_arbol, id_usuario, fecha_asignacion) VALUES (?, ?, CURDATE())', [arbolId, id_usuario]);
@@ -149,24 +147,26 @@ exports.adoptTree = async (req, res) => {
 
 exports.releaseTree = async (req, res) => {
     try {
-        // Obtenemos el ID del árbol desde la URL y el usuario desde el token JWT
         const id_arbol = req.params.id;
-        const id_usuario = req.user.id_usuario;
+        // EXTRACCIÓN SEGURA: Evita crash si no hay token JWT configurado en esta ruta
+        const id_usuario = (req.user && req.user.id_usuario) ? req.user.id_usuario : req.body.id_usuario;
 
-        // Borramos estrictamente la relación entre ESE usuario y ESE árbol
+        if (!id_usuario) {
+            return res.status(400).json({ success: false, message: 'Falta el ID del usuario.' });
+        }
+
         const [result] = await db.query(
             'DELETE FROM arbol_cuidador WHERE id_arbol = ? AND id_usuario = ?', 
             [id_arbol, id_usuario]
         );
 
-        // Si no se borró nada, significa que el usuario no era el padrino de ese árbol
         if (result.affectedRows === 0) {
             return res.status(403).json({ success: false, message: 'No puedes liberar un árbol que no te pertenece.' });
         }
 
-        res.json({ success: true, message: 'Árbol liberado correctamente. Ahora está disponible para otro voluntario.' });
+        res.json({ success: true, message: 'Árbol liberado correctamente.' });
     } catch (e) {
         console.error("Error al liberar árbol:", e);
-        res.status(500).json({ success: false, message: 'Error interno del servidor al liberar el árbol.' });
+        res.status(500).json({ success: false, message: 'Error interno del servidor al liberar.' });
     }
 };

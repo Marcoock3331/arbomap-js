@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mostrarPagina = () => document.body.classList.add('listo');
     
     try {
-        // Cargamos el sidebar con rompe-caché
         const res = await fetch('components/sidebar.html?v=' + new Date().getTime());
         if (res.ok) {
             const html = await res.text();
@@ -11,9 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             sidebarContainer.innerHTML = html;
         }
     } catch (err) { 
-        console.error("Error sidebar:", err); 
+        console.error("Error sidebar:", err);
     } finally { 
-        setTimeout(mostrarPagina, 100); 
+        setTimeout(mostrarPagina, 100);
     }
 
     const sessionData = sessionStorage.getItem('user');
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const avatarContainer = document.querySelector('.avatar-circle');
     const cameraIcon = document.querySelector('.camera-icon');
-    
     if (avatarContainer) {
         avatarContainer.style.cursor = 'pointer';
         avatarContainer.addEventListener('click', () => fileInput.click());
@@ -49,15 +47,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             if (cameraIcon) cameraIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
             const res = await ApiService.post(`/users/${usuarioActual.id_usuario}/photo`, formData);
-            
             if (res.success) {
                 ApiService.toast('success', '¡Foto de perfil actualizada!');
                 cargarDatosPerfil(usuarioActual);
             }
         } catch (err) {
-            // El error lo muestra automáticamente ApiService
         } finally {
             if (cameraIcon) cameraIcon.innerHTML = '<i class="fas fa-camera"></i>';
             fileInput.value = ''; 
@@ -88,7 +83,6 @@ async function cargarDatosPerfil(user) {
         }
 
         const topbarInitials = document.getElementById('topbar-initials');
-
         if (info.foto_perfil) {
             imgPerfil.src = `/uploads/${info.foto_perfil}`;
             imgPerfil.style.display = 'block';
@@ -108,11 +102,38 @@ async function cargarDatosPerfil(user) {
         document.getElementById('perfil-nombre').innerText = info.nombre_completo;
         document.getElementById('perfil-matricula').innerText = info.matricula;
         document.getElementById('perfil-rol').innerText = info.rol;
-        document.getElementById('perfil-conteo').innerText = arboles.length ?? 0;
+        
+        // --- SI ES ADMINISTRADOR, MUESTRA PANEL EJECUTIVO ---
+        const isAdmin = user.id_rol === 1;
+        document.getElementById('perfil-conteo').innerText = isAdmin ? 'Admin' : (arboles.length ?? 0);
 
         const contenedor = document.getElementById('contenedor-arboles');
         contenedor.innerHTML = '';
         
+        if (isAdmin) {
+            // Reemplazamos el título del bosque por uno de Admin
+            document.querySelector('h4.text-gray-800').innerHTML = '<i class="fas fa-shield-alt text-primary mr-2"></i> Panel de Administrador';
+            
+            contenedor.innerHTML = `
+                <div class="col-12">
+                    <div class="card border-left-primary shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="font-weight-bold text-primary mb-3">Resumen Ejecutivo</h5>
+                            <p class="text-muted">Como administrador de ArboMap UTM, no tienes árboles asignados individualmente. Posees autoridad global sobre el inventario forestal y la logística de reforestación de la universidad.</p>
+                            <hr>
+                            <div class="d-flex flex-wrap mt-3">
+                                <a href="inventario.html" class="btn btn-outline-success rounded-pill px-4 mr-2 mb-2"><i class="fas fa-tree mr-1"></i> Ver Inventario Completo</a>
+                                <a href="gestion_padrinos.html" class="btn btn-outline-info rounded-pill px-4 mr-2 mb-2"><i class="fas fa-users mr-1"></i> Gestionar Voluntarios</a>
+                                <a href="reforestacion.html" class="btn btn-outline-primary rounded-pill px-4 mb-2"><i class="fas fa-calendar-alt mr-1"></i> Panel de Reforestación</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // --- VISTA NORMAL DE VOLUNTARIO ---
         if (arboles.length === 0) {
             contenedor.innerHTML = `
                 <div class="col-12 text-center py-5">
@@ -157,7 +178,7 @@ async function cargarDatosPerfil(user) {
                 </div>`;
         });
     } catch (e) { 
-        console.error("Error cargando perfil:", e); 
+        console.error("Error cargando perfil:", e);
     }
 }
 
@@ -166,7 +187,6 @@ async function cargarDatosPerfil(user) {
 // ==========================================
 window.liberarArbol = async function(idArbol) {
     if (!idArbol) return ApiService.toast('error', 'No se identificó el árbol.');
-
     const result = await Swal.fire({
         title: '¿Liberar este árbol?',
         text: "Dejarás de ser su padrino y otro voluntario podrá adoptarlo para cuidarlo.",
@@ -182,11 +202,14 @@ window.liberarArbol = async function(idArbol) {
     if (!result.isConfirmed) return;
 
     try {
-        const res = await ApiService.post(`/trees/${idArbol}/release`);
+        const sessionData = JSON.parse(sessionStorage.getItem('user'));
+        
+        // EL FIX: Enviamos el id_usuario en el cuerpo del POST
+        const res = await ApiService.post(`/trees/${idArbol}/release`, { id_usuario: sessionData.id_usuario });
+        
         if (res.success) {
             ApiService.toast('success', '¡Árbol liberado exitosamente!');
-            const sessionData = sessionStorage.getItem('user');
-            if (sessionData) cargarDatosPerfil(JSON.parse(sessionData));
+            cargarDatosPerfil(sessionData); // Refrescamos el perfil pasando el objeto parseado
         }
     } catch (err) { /* Error manejado por ApiService */ }
 };

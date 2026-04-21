@@ -3,7 +3,6 @@ const db = require('../config/db');
 // Obtener la lista de alumnos y contar cuántos árboles tienen a cargo
 exports.getDirectorioPadrinos = async (req, res) => {
     try {
-        // Asumiendo que id_rol = 2 es para los alumnos/voluntarios
         const [rows] = await db.query(`
             SELECT u.id_usuario, u.matricula, u.nombre_completo, u.carrera, u.cuatrimestre,
                    COUNT(ac.id_arbol) AS arboles_a_cargo
@@ -11,6 +10,7 @@ exports.getDirectorioPadrinos = async (req, res) => {
             LEFT JOIN arbol_cuidador ac ON u.id_usuario = ac.id_usuario
             WHERE u.id_rol = 2 
             GROUP BY u.id_usuario
+            HAVING arboles_a_cargo > 0
             ORDER BY u.nombre_completo ASC
         `);
         res.json(rows);
@@ -20,14 +20,12 @@ exports.getDirectorioPadrinos = async (req, res) => {
     }
 };
 
-// Acción: Egresar y Liberar (Borrar de arbol_cuidador y eliminar usuario)
+// Acción: Egresar y Liberar (Borrar de arbol_cuidador y eliminar usuario definitivamente)
 exports.egresarPadrino = async (req, res) => {
     try {
         const id_usuario = req.params.id;
-        
         // 1. Liberar todos los árboles que tenía a cargo el alumno
         await db.query('DELETE FROM arbol_cuidador WHERE id_usuario = ?', [id_usuario]);
-        
         // 2. Eliminar el registro del estudiante de la plataforma por graduación
         await db.query('DELETE FROM usuario WHERE id_usuario = ?', [id_usuario]);
         
