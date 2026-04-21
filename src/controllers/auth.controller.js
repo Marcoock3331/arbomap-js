@@ -35,14 +35,21 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
-        let { nombre_completo, matricula, password } = req.body;
+        // NUEVO: Extraemos carrera y cuatrimestre del req.body
+        let { nombre_completo, matricula, password, carrera, cuatrimestre } = req.body;
         matricula = matricula.toUpperCase().trim(); 
 
         const [existing] = await db.query('SELECT id_usuario FROM usuario WHERE matricula = ?', [matricula]);
         if (existing.length > 0) return res.status(400).json({ success: false, message: 'Esta matrícula ya está registrada' });
 
         const hash = await bcrypt.hash(password, 10);
-        await db.query('INSERT INTO usuario (nombre_completo, matricula, password, id_rol) VALUES (?, ?, ?, 2)', [nombre_completo, matricula, hash]);
+        
+        // NUEVO: Agregamos carrera y cuatrimestre a la consulta SQL
+        await db.query(
+            'INSERT INTO usuario (nombre_completo, matricula, password, id_rol, carrera, cuatrimestre) VALUES (?, ?, ?, 2, ?, ?)', 
+            [nombre_completo, matricula, hash, carrera, cuatrimestre]
+        );
+        
         res.json({ success: true });
     } catch (e) {
         console.error(e);

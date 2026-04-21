@@ -1,89 +1,365 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ArboMap UTM | Inicio</title>
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
-    <style>
-        .hero-bg {
-            /* Imagen de fondo oscurecida para que el texto resalte */
-            background: linear-gradient(rgba(26, 37, 47, 0.8), rgba(26, 37, 47, 0.8)), url('img/fondo-hero.jpg') center/cover;
-            color: white;
-            padding: 120px 0;
-            margin-top: 50px; /* Espacio para el navbar fijo */
-        }
-        .feature-icon {
-            font-size: 3.5rem;
-            color: #2e7d32;
-            margin-bottom: 20px;
-        }
-        .navbar-brand i { color: #2e7d32; }
-    </style>
-</head>
-<body id="page-top" class="bg-light">
 
-    <nav class="navbar navbar-expand navbar-light bg-white shadow-sm fixed-top">
-        <div class="container">
-            <a class="navbar-brand font-weight-bold text-dark" href="inicio.html">
-                <i class="fas fa-tree mr-1"></i>ArboMap <span class="font-weight-light text-muted">UTM</span>
-            </a>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="login.html" class="nav-link text-success font-weight-bold pr-3">Iniciar Sesión</a>
-                </li>
-                <li class="nav-item">
-                    <a href="registro.html" class="btn btn-success shadow-sm font-weight-bold">¡Ser Voluntario!</a>
-                </li>
-            </ul>
+    <link
+      href="vendor/fontawesome-free/css/all.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      .hero-bg {
+        background:
+          linear-gradient(rgba(26, 37, 47, 0.8), rgba(26, 37, 47, 0.8)),
+          url("img/fondo-hero.jpg") center/cover;
+        color: white;
+        padding: 140px 0 100px 0;
+        margin-top: 56px;
+      }
+      .feature-icon {
+        font-size: 3.5rem;
+        color: #2e7d32;
+        margin-bottom: 20px;
+        transition: transform 0.3s;
+      }
+      .feature-card:hover .feature-icon {
+        transform: scale(1.1);
+      }
+      .navbar-brand i {
+        color: #2e7d32;
+      }
+      .stat-card {
+        border-radius: 15px;
+        border: none;
+        transition: transform 0.3s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+      .bg-utm {
+        background-color: #1a252f;
+      }
+    </style>
+  </head>
+  <body id="page-top" class="bg-light">
+    <nav
+      class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top"
+    >
+      <div class="container">
+        <a class="navbar-brand font-weight-bold text-dark" href="#page-top">
+          <i class="fas fa-tree mr-1"></i>ArboMap
+          <span class="font-weight-light text-muted">UTM</span>
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto align-items-center">
+            <li class="nav-item">
+              <a
+                href="#caracteristicas"
+                class="nav-link text-dark font-weight-bold"
+                >¿Qué hacemos?</a
+              >
+            </li>
+            <li class="nav-item">
+              <a href="#impacto" class="nav-link text-dark font-weight-bold"
+                >Impacto</a
+              >
+            </li>
+            <li class="nav-item">
+              <a href="#buzon" class="nav-link text-dark font-weight-bold"
+                >Buzón</a
+              >
+            </li>
+            <li class="nav-item ml-lg-3">
+              <a
+                href="login.html"
+                class="nav-link text-success font-weight-bold pr-3"
+                >Iniciar Sesión</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                href="registro.html"
+                class="btn btn-success shadow-sm font-weight-bold rounded-pill px-4"
+                >¡Ser Voluntario!</a
+              >
+            </li>
+          </ul>
         </div>
+      </div>
     </nav>
 
     <header class="hero-bg text-center">
-        <div class="container">
-            <h1 class="display-4 font-weight-bold mb-4">Gestión Forestal Inteligente</h1>
-            <p class="lead mb-5 mx-auto" style="max-width: 700px;">
-                Descubre, protege y apadrina las áreas verdes de la Universidad Tecnológica de Morelia. 
-                Un sistema digital creado por y para la comunidad universitaria.
-            </p>
-            <a href="registro.html" class="btn btn-success btn-lg shadow font-weight-bold px-5 py-3" style="border-radius: 30px;">
-                Únete al Proyecto <i class="fas fa-arrow-right ml-2"></i>
-            </a>
-        </div>
+      <div class="container animate__animated animate__fadeInUp">
+        <h1 class="display-4 font-weight-bold mb-4">
+          Gestión Forestal Inteligente
+        </h1>
+        <p class="lead mb-5 mx-auto" style="max-width: 700px">
+          Descubre, protege y apadrina las áreas verdes de la Universidad
+          Tecnológica de Morelia. Un sistema digital creado por y para la
+          comunidad universitaria.
+        </p>
+        <a
+          href="registro.html"
+          class="btn btn-success btn-lg shadow font-weight-bold px-5 py-3 animate__animated animate__pulse animate__infinite"
+          style="border-radius: 30px"
+        >
+          Únete al Proyecto <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
     </header>
 
-    <section class="py-5 bg-white">
-        <div class="container py-4">
-            <div class="text-center mb-5">
-                <h2 class="font-weight-bold text-dark">¿Qué hacemos en ArboMap?</h2>
-                <p class="text-muted">Tecnología aplicada a la conservación ambiental.</p>
-            </div>
-            <div class="row text-center">
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-map-marked-alt feature-icon"></i>
-                    <h4 class="font-weight-bold text-dark">Inventario Georreferenciado</h4>
-                    <p class="text-muted">Explora cada árbol del campus en nuestro mapa interactivo con datos precisos sobre su especie, salud y ubicación.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-hand-holding-heart feature-icon"></i>
-                    <h4 class="font-weight-bold text-dark">Programa de Apadrinamiento</h4>
-                    <p class="text-muted">Conviértete en el cuidador oficial de un árbol. Dale seguimiento a su expediente clínico y ayúdalo a crecer fuerte.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-seedling feature-icon"></i>
-                    <h4 class="font-weight-bold text-dark">Campañas de Reforestación</h4>
-                    <p class="text-muted">Participa en las propuestas para plantar nuevos árboles y revitalizar las zonas verdes de nuestra universidad.</p>
-                </div>
-            </div>
+    <section id="caracteristicas" class="py-5 bg-white">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <h2 class="font-weight-bold text-dark">¿Qué hacemos en ArboMap?</h2>
+          <p class="text-muted">
+            Tecnología aplicada a la conservación ambiental.
+          </p>
         </div>
+        <div class="row text-center">
+          <div class="col-md-4 mb-4 feature-card">
+            <i class="fas fa-map-marked-alt feature-icon"></i>
+            <h4 class="font-weight-bold text-dark">
+              Inventario Georreferenciado
+            </h4>
+            <p class="text-muted">
+              Explora cada árbol del campus en nuestro mapa interactivo con
+              datos precisos sobre su especie, salud y ubicación.
+            </p>
+          </div>
+          <div class="col-md-4 mb-4 feature-card">
+            <i
+              class="fas fa-hand-holding-heart feature-icon"
+              style="color: #009688"
+            ></i>
+            <h4 class="font-weight-bold text-dark">
+              Programa de Apadrinamiento
+            </h4>
+            <p class="text-muted">
+              Conviértete en el cuidador oficial de un árbol. Dale seguimiento a
+              su expediente clínico y ayúdalo a crecer fuerte.
+            </p>
+          </div>
+          <div class="col-md-4 mb-4 feature-card">
+            <i class="fas fa-seedling feature-icon" style="color: #20c997"></i>
+            <h4 class="font-weight-bold text-dark">
+              Campañas de Reforestación
+            </h4>
+            <p class="text-muted">
+              Participa en las propuestas para plantar nuevos árboles y
+              revitalizar las zonas verdes de nuestra universidad.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <footer class="bg-dark text-white text-center py-4">
-        <div class="container">
-            <p class="m-0 small">Copyright &copy; ArboMap UTM 2026. Desarrollado por los TECNONAUTAS.</p>
+    <section id="impacto" class="py-5 bg-light">
+      <div class="container py-4 text-center">
+        <h2 class="font-weight-bold text-dark mb-2">Nuestro Impacto UTM</h2>
+        <p class="text-muted mb-5">
+          Datos actualizados en tiempo real por nuestros voluntarios.
+        </p>
+
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div
+              class="card stat-card shadow-sm h-100 py-4 border-left-success"
+            >
+              <div class="card-body">
+                <h2
+                  class="font-weight-bold text-success display-4"
+                  id="stat-trees"
+                >
+                  <i class="fas fa-spinner fa-spin fa-xs"></i>
+                </h2>
+                <p class="text-muted font-weight-bold mb-0">
+                  ÁRBOLES INVENTARIADOS
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div
+              class="card stat-card shadow-sm h-100 py-4 border-left-warning"
+            >
+              <div class="card-body">
+                <h2
+                  class="font-weight-bold text-warning display-4"
+                  id="stat-padrinos"
+                >
+                  <i class="fas fa-spinner fa-spin fa-xs"></i>
+                </h2>
+                <p class="text-muted font-weight-bold mb-0">
+                  ÁRBOLES APADRINADOS
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="card stat-card shadow-sm h-100 py-4 border-left-info">
+              <div class="card-body">
+                <h2
+                  class="font-weight-bold text-info display-4"
+                  id="stat-species"
+                >
+                  <i class="fas fa-spinner fa-spin fa-xs"></i>
+                </h2>
+                <p class="text-muted font-weight-bold mb-0">
+                  ESPECIES REGISTRADAS
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section id="buzon" class="py-5 bg-white">
+      <div class="container py-4">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="card shadow border-0" style="border-radius: 15px">
+              <div class="card-body p-5">
+                <div class="text-center mb-4">
+                  <i
+                    class="fas fa-envelope-open-text fa-3x text-success mb-3"
+                  ></i>
+                  <h3 class="font-weight-bold text-dark">
+                    Buzón de Sugerencias
+                  </h3>
+                  <p class="text-muted">
+                    ¿Tienes alguna idea para mejorar las áreas verdes o viste un
+                    árbol que necesita atención? ¡Escríbenos!
+                  </p>
+                </div>
+                <form id="formBuzonPublico">
+                  <div class="row">
+                    <div class="col-md-6 form-group">
+                      <input
+                        type="text"
+                        id="buzon-nombre"
+                        class="form-control form-control-lg bg-light border-0"
+                        placeholder="Tu Nombre"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-6 form-group">
+                      <input
+                        type="email"
+                        id="buzon-email"
+                        class="form-control form-control-lg bg-light border-0"
+                        placeholder="Tu Correo Electrónico"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group mt-2">
+                    <textarea
+                      id="buzon-mensaje"
+                      class="form-control form-control-lg bg-light border-0"
+                      rows="4"
+                      placeholder="Escribe tu mensaje o sugerencia aquí..."
+                      required
+                    ></textarea>
+                  </div>
+                  <button
+                    type="submit"
+                    class="btn btn-success btn-lg btn-block font-weight-bold shadow-sm"
+                    style="border-radius: 10px"
+                  >
+                    <i class="fas fa-paper-plane mr-2"></i>Enviar Mensaje
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bg-utm text-white text-center py-4 mt-auto">
+      <div class="container">
+        <i class="fas fa-tree fa-2x mb-3 text-success"></i>
+        <p class="m-0 font-weight-bold">Copyright &copy; ArboMap UTM 2026</p>
+        <p class="small text-muted mt-1 mb-0">
+          Diseñado y Desarrollado por los <b>TECNONAUTAS</b>.
+        </p>
+      </div>
     </footer>
 
-</body>
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api-service.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        // 1. Cargar estadísticas reales usando la nueva ruta PÚBLICA
+        try {
+          // Cambiamos /trees/stats por /public/stats
+          const data = await ApiService.get("/public/stats");
+          document.getElementById("stat-trees").innerText =
+            data.totalArboles || 0;
+          document.getElementById("stat-species").innerText =
+            data.totalEspecies || 0;
+
+          let apadrinados = 0;
+          if (data.arboles) {
+            data.arboles.forEach((a) => {
+              if (a.padrino) apadrinados++;
+            });
+          }
+          document.getElementById("stat-padrinos").innerText = apadrinados;
+        } catch (e) {
+          document.getElementById("stat-trees").innerText = "-";
+          document.getElementById("stat-padrinos").innerText = "-";
+          document.getElementById("stat-species").innerText = "-";
+        }
+
+        // 2. Manejar el envío REAL del Buzón
+        document
+          .getElementById("formBuzonPublico")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const datosBuzon = {
+              nombre: document.getElementById("buzon-nombre").value,
+              email: document.getElementById("buzon-email").value,
+              mensaje: document.getElementById("buzon-mensaje").value,
+            };
+
+            try {
+              // Enviamos los datos a la nueva ruta pública del buzón
+              await ApiService.post("/public/buzon", datosBuzon);
+              ApiService.toast(
+                "success",
+                "¡Gracias! Tu mensaje ha sido enviado a los administradores.",
+              );
+              this.reset(); // Limpia el formulario
+            } catch (error) {
+              // El error ya lo maneja ApiService
+            }
+          });
+      });
+    </script>
+  </body>
 </html>

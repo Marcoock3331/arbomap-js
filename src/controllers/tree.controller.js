@@ -5,13 +5,16 @@ exports.getStats = async (req, res) => {
         const [total] = await db.query('SELECT COUNT(*) as t FROM arbol');
         const [esp] = await db.query('SELECT COUNT(*) as t FROM especie');
         
-        // OPTIMIZACIÓN: Window Function para evitar N+1 queries
+        // OPTIMIZACIÓN Y NUEVA LÓGICA: Traemos al padrino usando JOINs
         const [mapa] = await db.query(`
             SELECT a.*, e.nombre_comun, e.nombre_cientifico, s.nombre_zona, 
-                   seg.estado_salud as estado, seg.foto_url as foto_actual
+                   seg.estado_salud as estado, seg.foto_url as foto_actual,
+                   u.nombre_completo AS padrino
             FROM arbol a
             JOIN especie e ON a.id_especie = e.id_especie
             LEFT JOIN sitio s ON a.id_sitio = s.id_sitio
+            LEFT JOIN arbol_cuidador ac ON a.id_arbol = ac.id_arbol
+            LEFT JOIN usuario u ON ac.id_usuario = u.id_usuario
             LEFT JOIN (
                 SELECT id_arbol, estado_salud, foto_url,
                        ROW_NUMBER() OVER(PARTITION BY id_arbol ORDER BY fecha_revision DESC) as rn
@@ -126,10 +129,17 @@ exports.getTreeByTag = async (req, res) => {
     }
 };
 
+// ==========================================
+// NUEVO: Adopción ajustada para funcionar con el mapa
+// ==========================================
 exports.adoptTree = async (req, res) => {
     try {
-        const { id_usuario } = req.body;
-        await db.query('INSERT INTO arbol_cuidador (id_arbol, id_usuario, fecha_asignacion) VALUES (?, ?, CURDATE())', [req.params.id, id_usuario]);
+        // Extraemos el id_arbol e id_usuario del body
+        const { id_arbol, id_usuario } = req.body;
+        // Respaldo por si mandaron el id_arbol en la URL
+        const arbolId = id_arbol || req.params.id;
+
+        await db.query('INSERT INTO arbol_cuidador (id_arbol, id_usuario, fecha_asignacion) VALUES (?, ?, CURDATE())', [arbolId, id_usuario]);
         res.json({ success: true });
     } catch (e) {
         console.error(e);

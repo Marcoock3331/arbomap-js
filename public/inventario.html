@@ -10,6 +10,7 @@
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
     <script src="js/api-service.js"></script>
 
@@ -22,7 +23,8 @@
         .btn-utm { background-color: #009688; color: white; border: none; }
         .btn-utm:hover { background-color: #00796b; color: white; }
         
-        .img-arbol-tabla { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        .img-arbol-tabla { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; transition: transform 0.2s; }
+        .img-arbol-tabla:hover { transform: scale(1.5); box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 10; position: relative;}
         #mapaSeleccion { height: 250px; border-radius: 10px; width: 100%; border: 2px solid #eaecf4; }
         .ocultar-impresion { display: table-cell; }
         
@@ -44,11 +46,11 @@
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars text-white"></i>
                     </button>
-                    <h1 class="h4 mb-0 text-white font-weight-bold">Inventario de Árboles (UTM)</h1>
+                    <h1 class="h4 mb-0 text-white font-weight-bold animate__animated animate__fadeInDown">Inventario de Árboles (UTM)</h1>
                 </nav>
 
                 <div class="container-fluid">
-                    <div class="card shadow-sm mb-4 border-0" style="border-radius: 12px;">
+                    <div class="card shadow-sm mb-4 border-0 animate__animated animate__fadeInUp" style="border-radius: 12px; animation-duration: 0.8s;">
                         <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center" style="border-radius: 12px 12px 0 0;">
                             <h5 class="m-0 font-weight-bold text-utm"><i class="fas fa-list-ul mr-2"></i>Listado General</h5>
                             <div>
@@ -111,7 +113,7 @@
     </div>
 
     <div class="modal fade" id="modalNuevoArbol" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-centered animate__animated animate__zoomIn" style="animation-duration: 0.3s;" role="document">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
                 <div class="modal-header text-white" style="background-color: #009688; border-radius: 15px 15px 0 0;">
                     <h5 class="modal-title font-weight-bold"><i class="fas fa-leaf mr-2"></i>Registrar Nuevo Ejemplar</h5>
@@ -121,14 +123,25 @@
                     <div class="modal-body bg-light p-4">
                         <div class="row">
                             <div class="col-md-5 mb-3">
-                                <label class="font-weight-bold text-gray-800 small"><i class="fas fa-map-marker-alt text-danger mr-1"></i> Ubicación GPS (Haz clic en el mapa)</label>
-                                <div id="mapaSeleccion" class="mb-2 shadow-sm"></div>
+                                <label class="font-weight-bold text-gray-800 small"><i class="fas fa-map-marker-alt text-danger mr-1"></i> Ubicación en el Mapa</label>
+                                <div id="mapaSeleccion" class="mb-3 shadow-sm"></div>
+                                
+                                <button type="button" class="btn btn-outline-info btn-block rounded-pill font-weight-bold mb-3 shadow-sm" onclick="obtenerCoordenadasGPS()">
+                                    <i class="fas fa-satellite-dish mr-2"></i> Usar mi GPS actual
+                                </button>
+
                                 <div class="row">
-                                    <div class="col-6"><input type="text" id="lat" name="latitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Latitud" readonly required></div>
-                                    <div class="col-6"><input type="text" id="lng" name="longitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Longitud" readonly required></div>
+                                    <div class="col-6">
+                                        <label class="small text-muted mb-0">Latitud</label>
+                                        <input type="text" id="lat" name="latitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Ej. 19.726" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-muted mb-0">Longitud</label>
+                                        <input type="text" id="lng" name="longitud" class="form-control form-control-sm text-center font-weight-bold text-info" placeholder="Ej. -101.16" required>
+                                    </div>
                                 </div>
-                                <div class="mt-2 text-center p-2 bg-white rounded shadow-sm border">
-                                    <small class="text-muted d-block">Zona Detectada:</small>
+                                <div class="mt-3 text-center p-2 bg-white rounded shadow-sm border">
+                                    <small class="text-muted d-block">Zona Detectada (Automática):</small>
                                     <div id="zona-detectada-text" class="font-weight-bold">Esperando ubicación...</div>
                                     <input type="hidden" name="id_sitio" id="id_sitio">
                                 </div>
@@ -169,20 +182,19 @@
                                     </div>
                                     <div class="col-md-6 form-group">
                                         <label class="font-weight-bold text-gray-800 small">Campaña de Reforestación</label>
-                                        <select name="id_reforestacion" class="form-control rounded-pill border-success text-success font-weight-bold">
-                                            </select>
+                                        <select name="id_reforestacion" class="form-control rounded-pill border-success text-success font-weight-bold"></select>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group mb-0 mt-2">
-                                    <label class="font-weight-bold text-gray-800 small"><i class="fas fa-camera mr-1"></i> Fotografía del Ejemplar (Evidencia inicial)</label>
+                                    <label class="font-weight-bold text-gray-800 small"><i class="fas fa-camera mr-1"></i> Fotografía (Evidencia inicial)</label>
                                     <input type="file" name="foto" class="form-control-file border p-2 rounded bg-white" accept="image/*">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-light">
-                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-dismiss="modal">Cancelar</button>
+                         <button type="button" class="btn btn-secondary rounded-pill px-4 shadow-sm" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-utm rounded-pill px-5 font-weight-bold shadow-sm">Registrar Árbol en BD</button>
                     </div>
                 </form>
@@ -191,7 +203,7 @@
     </div>
 
     <div class="modal fade" id="modalEditarArbol" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered animate__animated animate__zoomIn" style="animation-duration: 0.3s;" role="document">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
                 <div class="modal-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
                     <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i>Editar Datos del Árbol</h5>
@@ -203,51 +215,51 @@
                         <div class="row">
                             <div class="col-md-6 form-group">
                                 <label class="small font-weight-bold text-gray-700">Código / Etiqueta</label>
-                                <input type="text" name="codigo_etiqueta" id="edit-codigo" class="form-control rounded-pill" required>
+                                 <input type="text" name="codigo_etiqueta" id="edit-codigo" class="form-control rounded-pill" required>
                             </div>
                             
                             <div class="col-md-6 form-group">
                                 <label class="small font-weight-bold text-gray-700 text-danger">Nuevo Estado de Salud</label>
                                 <select name="estado_salud" id="edit-estado" class="form-control rounded-pill border-danger text-danger font-weight-bold">
-                                    <option value="">-- No actualizar estado --</option>
+                                     <option value="">-- No actualizar estado --</option>
                                     <option value="Bueno">Bueno</option>
-                                    <option value="Regular">Regular</option>
+                                     <option value="Regular">Regular</option>
                                     <option value="Malo">Malo</option>
                                 </select>
-                            </div>
+                             </div>
                             
                             <div class="col-md-6 form-group">
                                 <label class="small font-weight-bold text-gray-700">Nombre Común</label>
-                                <input type="text" name="nombre_comun" id="edit-comun" class="form-control rounded-pill" required>
+                                 <input type="text" name="nombre_comun" id="edit-comun" class="form-control rounded-pill" required>
                             </div>
                             <div class="col-md-6 form-group">
-                                <label class="small font-weight-bold text-gray-700">Nombre Científico</label>
+                                 <label class="small font-weight-bold text-gray-700">Nombre Científico</label>
                                 <input type="text" name="nombre_cientifico" id="edit-cientifico" class="form-control rounded-pill font-italic">
                             </div>
-                            <div class="col-md-12 form-group">
+                             <div class="col-md-12 form-group">
                                 <label class="small font-weight-bold text-gray-700">Descripción</label>
                                 <textarea name="descripcion" id="edit-desc" class="form-control" style="border-radius: 10px;" rows="2"></textarea>
-                            </div>
+                             </div>
                             <div class="col-md-4 form-group">
                                 <label class="small font-weight-bold text-gray-700">Latitud</label>
-                                <input type="text" name="latitud" id="edit-lat" class="form-control form-control-sm text-center" required>
+                                 <input type="text" name="latitud" id="edit-lat" class="form-control form-control-sm text-center" required>
                             </div>
                             <div class="col-md-4 form-group">
-                                <label class="small font-weight-bold text-gray-700">Longitud</label>
+                                 <label class="small font-weight-bold text-gray-700">Longitud</label>
                                 <input type="text" name="longitud" id="edit-lng" class="form-control form-control-sm text-center" required>
                             </div>
-                            <div class="col-md-4 form-group">
+                             <div class="col-md-4 form-group">
                                 <label class="small font-weight-bold text-gray-700">ID Zona</label>
                                 <input type="number" name="id_sitio" id="edit-sitio" class="form-control form-control-sm text-center" placeholder="Ej: 2">
-                            </div>
+                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pb-4 d-flex justify-content-center bg-white">
-                        <button type="submit" class="btn btn-warning rounded-pill px-5 font-weight-bold text-dark shadow-sm">
+                         <button type="submit" class="btn btn-warning rounded-pill px-5 font-weight-bold text-dark shadow-sm">
                             Guardar Cambios
                         </button>
                     </div>
-                </form>
+                 </form>
             </div>
         </div>
     </div>

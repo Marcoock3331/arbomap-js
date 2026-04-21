@@ -4,98 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ArboMap UTM | Iniciar Sesión</title>
-    <link
-      href="vendor/fontawesome-free/css/all.min.css"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
     <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <style>
       .bg-login-image {
         background-image: url("https://cdn.pixabay.com/photo/2016/11/29/03/40/forest-1867120_1280.jpg");
         background-size: cover;
         background-position: center;
       }
-      .btn-success {
-        background-color: #2e7d32;
-        border-color: #2e7d32;
-      }
-      .btn-success:hover {
-        background-color: #1b5e20;
-        border-color: #1b5e20;
-      }
-      .text-success {
-        color: #2e7d32 !important;
-      }
+      .btn-success { background-color: #2e7d32; border-color: #2e7d32; }
+      .btn-success:hover { background-color: #1b5e20; border-color: #1b5e20; }
+      .text-success { color: #2e7d32 !important; }
     </style>
   </head>
-  <body
-    class="bg-gradient-success"
-    style="background-image: linear-gradient(180deg, #1b5e20 10%, #81c784 100%)"
-  >
+  <body class="bg-gradient-success" style="background-image: linear-gradient(180deg, #1b5e20 10%, #81c784 100%)">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-xl-10 col-lg-12 col-md-9">
-          <div class="card o-hidden border-0 shadow-lg my-5">
+          <div class="card o-hidden border-0 shadow-lg my-5 animate__animated animate__fadeInUp" style="animation-duration: 0.6s;">
             <div class="card-body p-0">
               <div class="row">
                 <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
                 <div class="col-lg-6">
                   <div class="p-5">
                     <div class="text-center mb-4">
-                      <i class="fas fa-tree text-success fa-3x mb-3"></i>
+                      <i class="fas fa-tree text-success fa-3x mb-3 animate__animated animate__pulse animate__infinite"></i>
                       <h1 class="h3 text-gray-900 font-weight-bold">
-                        ArboMap
-                        <span class="font-weight-light text-muted">UTM</span>
+                        ArboMap <span class="font-weight-light text-muted">UTM</span>
                       </h1>
-                      <p class="text-muted">
-                        Sistema de Gestión e Inventario Forestal
-                      </p>
+                      <p class="text-muted">Sistema de Gestión e Inventario Forestal</p>
                     </div>
                     <form class="user" id="formLogin">
                       <div class="form-group">
-                        <input
-                          type="text"
-                          class="form-control form-control-user"
-                          id="matricula"
-                          placeholder="Ingresa tu matrícula"
-                          required
-                        />
+                        <input type="text" class="form-control form-control-user" id="matricula" placeholder="Ingresa tu matrícula" required />
                       </div>
                       <div class="form-group">
-                        <input
-                          type="password"
-                          class="form-control form-control-user"
-                          id="password"
-                          placeholder="Contraseña"
-                          required
-                        />
+                        <input type="password" class="form-control form-control-user" id="password" placeholder="Contraseña" required />
                       </div>
-                      <div
-                        class="alert alert-danger text-center small"
-                        id="error-msg"
-                        style="display: none; border-radius: 30px"
-                      >
-                        Error credenciales
-                      </div>
-                      <button
-                        type="submit"
-                        class="btn btn-success btn-user btn-block font-weight-bold"
-                      >
+                      <button type="submit" class="btn btn-success btn-user btn-block font-weight-bold">
                         ENTRAR <i class="fas fa-sign-in-alt ml-1"></i>
                       </button>
                     </form>
                     <hr />
                     <div class="text-center">
-                      <a class="small text-success" href="registro.html"
-                        >¿No tienes cuenta? Regístrate aquí</a
-                      >
+                      <a class="small text-success font-weight-bold" href="registro.html">¿No tienes cuenta? Regístrate aquí</a>
                     </div>
                     <div class="text-center mt-2">
-                      <a class="small text-muted" href="inicio.html"
-                        ><i class="fas fa-arrow-left mr-1"></i>Volver a la
-                        Página Principal</a
-                      >
+                      <a class="small text-muted" href="inicio.html"><i class="fas fa-arrow-left mr-1"></i>Volver a la Página Principal</a>
                     </div>
                   </div>
                 </div>
@@ -105,43 +61,30 @@
         </div>
       </div>
     </div>
+    
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="js/sb-admin-2.min.css"></script>
     <script src="js/api-service.js"></script>
     <script>
-      // AUTO-UPPERCASE EN TIEMPO REAL
-      document
-        .getElementById("matricula")
-        .addEventListener("input", function () {
+      document.getElementById("matricula").addEventListener("input", function () {
           this.value = this.value.toUpperCase();
-        });
+      });
 
-      document
-        .getElementById("formLogin")
-        .addEventListener("submit", async (e) => {
+      document.getElementById("formLogin").addEventListener("submit", async (e) => {
           e.preventDefault();
           const matricula = document.getElementById("matricula").value;
           const password = document.getElementById("password").value;
-          const errDiv = document.getElementById("error-msg");
 
           try {
-            const data = await ApiService.post("/auth/login", {
-              matricula,
-              password,
-            });
+            const data = await ApiService.post("/auth/login", { matricula, password });
             if (data.success) {
-              // Ahora guardamos el objeto user que también incluye el JWT
               const sessionData = data.user;
               sessionData.token = data.token;
               sessionStorage.setItem("user", JSON.stringify(sessionData));
-
               window.location.href = "index.html";
             }
           } catch (err) {
-            errDiv.innerText =
-              err.message || "Error conectando con el servidor.";
-            errDiv.style.display = "block";
+            // ApiService ya muestra el error visualmente, no es necesario hacer más
           }
         });
     </script>

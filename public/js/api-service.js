@@ -1,11 +1,8 @@
 const ApiService = {
     baseUrl: '/api',
 
-    // ==========================================
-    // 1. INYECCIÓN AUTOMÁTICA DE UX/UI
-    // ==========================================
-    initUI() {
-        // Inyectamos SweetAlert2 si no existe
+   initUI() {
+        // 1. Inyectamos SweetAlert2 si no existe
         if (!document.getElementById('swal-script')) {
             const script = document.createElement('script');
             script.id = 'swal-script';
@@ -13,7 +10,7 @@ const ApiService = {
             document.head.appendChild(script);
         }
 
-        // Inyectamos el diseño del Spinner de carga en el HTML
+        // 2. Inyectamos el diseño del Spinner de carga en el HTML
         if (!document.getElementById('global-spinner')) {
             const style = document.createElement('style');
             style.innerHTML = `
@@ -40,6 +37,42 @@ const ApiService = {
             spinner.innerHTML = '<div class="spinner-circle"></div>';
             document.body.appendChild(spinner);
         }
+
+        // 3. Detectar si es administrador para revelar menús ocultos y BLOQUEAR intrusos
+        if (!document.getElementById('admin-styles')) {
+            const adminStyle = document.createElement('style');
+            adminStyle.id = 'admin-styles';
+            adminStyle.innerHTML = `
+                .admin-only { display: none !important; }
+                body.is-admin .admin-only { display: block !important; }
+            `;
+            document.head.appendChild(adminStyle);
+        }
+
+        const userStr = sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            
+            // Si es Administrador (Rol 1)
+            if (user.id_rol === 1) {
+                document.body.classList.add('is-admin');
+            } 
+            // Si es Voluntario (Rol 2) - EL CADENERO
+            else {
+                // LISTA NEGRA: Páginas que un voluntario NUNCA debe ver
+                const paginasProhibidas = ['gestion_padrinos.html', 'ver_buzon.html'];
+                const urlActual = window.location.pathname.toLowerCase();
+
+                // Verificamos si la URL actual tiene alguna de las palabras prohibidas
+                const esIntruso = paginasProhibidas.some(pagina => urlActual.includes(pagina));
+
+                if (esIntruso) {
+                    // Si intenta entrar, lo mandamos al index
+                    window.location.replace('index.html');
+                    return; 
+                }
+            }
+        }
     },
 
     showLoading() {
@@ -52,7 +85,6 @@ const ApiService = {
         if (spinner) spinner.classList.remove('active');
     },
 
-    // Función global para mostrar Toasts elegantes en cualquier archivo JS
     toast(icon, title) {
         if (window.Swal) {
             const Toast = Swal.mixin({
@@ -68,13 +100,12 @@ const ApiService = {
             });
             Toast.fire({ icon, title });
         } else {
-            // Respaldo de emergencia por si el internet está muy lento y Swal no ha cargado
             alert(title);
         }
     },
 
     // ==========================================
-    // 2. LÓGICA DE RED Y SEGURIDAD
+    // LÓGICA DE RED Y SEGURIDAD
     // ==========================================
     getToken() {
         const userStr = sessionStorage.getItem('user');
@@ -103,7 +134,6 @@ const ApiService = {
 
         const config = { ...options, headers };
 
-        // PRENDEMOS EL SPINNER ANTES DE ENVIAR LA PETICIÓN
         this.showLoading();
 
         try {
@@ -111,6 +141,13 @@ const ApiService = {
             const data = await response.json();
 
             if (response.status === 401 || response.status === 403) {
+                // ✅ Si la petición está marcada como pública, no interrumpimos al usuario
+                if (options.isPublic) {
+                    console.warn(`[API] Ruta pública denegada por el servidor: ${endpoint}`);
+                    return data;
+                }
+
+                // Para páginas privadas, mantenemos la seguridad normal
                 if (window.cerrarSesion) {
                     window.cerrarSesion();
                 } else {
@@ -128,19 +165,21 @@ const ApiService = {
             return data;
         } catch (error) {
             console.error(`[API Error] ${options.method || 'GET'} ${url}:`, error.message);
-            // MOSTRAMOS EL ERROR AUTOMÁTICAMENTE EN UN TOAST ROJO
-            this.toast('error', error.message);
+            // Solo mostramos toast de error si NO es una petición pública silenciosa
+            if (!options.isPublic) {
+                this.toast('error', error.message);
+            }
             throw error;
         } finally {
-            // APAGAMOS EL SPINNER SIN IMPORTAR SI HUBO ÉXITO O ERROR
             this.hideLoading();
         }
     },
 
-    get(endpoint) { return this.request(endpoint, { method: 'GET' }); },
-    post(endpoint, body) { return this.request(endpoint, { method: 'POST', body }); },
-    put(endpoint, body) { return this.request(endpoint, { method: 'PUT', body }); },
-    delete(endpoint) { return this.request(endpoint, { method: 'DELETE' }); }
+    get(endpoint)              { return this.request(endpoint, { method: 'GET' }); },
+    getPublic(endpoint)        { return this.request(endpoint, { method: 'GET', isPublic: true }); }, // ✅ Para rutas sin autenticación
+    post(endpoint, body)       { return this.request(endpoint, { method: 'POST', body }); },
+    put(endpoint, body)        { return this.request(endpoint, { method: 'PUT', body }); },
+    delete(endpoint)           { return this.request(endpoint, { method: 'DELETE' }); }
 };
 
 // Autoejecutamos la inyección visual apenas el navegador lea este archivo
@@ -149,3 +188,36 @@ if (document.readyState === 'loading') {
 } else {
     ApiService.initUI();
 }
+
+// ==========================================
+// FUNCIÓN GLOBAL PARA CERRAR SESIÓN
+// ==========================================
+window.cerrarSesion = function() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¿Deseas cerrar sesión?',
+            text: "Saldrás de tu cuenta de ArboMap UTM.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: '<i class="fas fa-sign-out-alt mr-1"></i> Sí, salir',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                ejecutarCierre();
+            }
+        });
+    } else {
+        if(confirm("¿Seguro que deseas salir?")) {
+            ejecutarCierre();
+        }
+    }
+
+    function ejecutarCierre() {
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('sidebarHTML'); 
+        window.location.href = 'login.html';
+    }
+};

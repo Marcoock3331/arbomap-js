@@ -7,19 +7,21 @@
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <script src="js/api-service.js"></script>
     <style>
       body {
         background-color: #00897b;
         font-family: "Inter", sans-serif;
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         align-items: center;
+        padding: 20px 0;
       }
       .card-auth {
         border: none;
         border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         padding: 40px;
       }
       .btn-auth {
@@ -37,59 +39,58 @@
   <body>
     <div class="container">
       <div class="row justify-content-center">
-        <div class="col-md-5">
-          <div class="card card-auth bg-white">
+        <div class="col-md-6 col-lg-5">
+          <div class="card card-auth bg-white animate__animated animate__zoomIn" style="animation-duration: 0.5s;">
             <div class="text-center mb-4">
-              <i class="fas fa-seedling fa-3x text-success"></i>
+              <i class="fas fa-seedling fa-3x text-success animate__animated animate__bounceIn" style="animation-delay: 0.3s;"></i>
               <h3 class="font-weight-bold text-dark mt-2">
                 Únete a ArboMap <span style="color: #00897b">UTM</span>
               </h3>
               <p class="text-muted small">
-                Ingresa con tu matrícula para ser voluntario.
+                Ingresa tus datos para ser voluntario forestal.
               </p>
             </div>
 
-            <div id="success-msg" class="alert alert-success text-center small py-3 font-weight-bold" style="display: none">
+            <div id="success-msg" class="alert alert-success text-center small py-3 font-weight-bold animate__animated animate__fadeIn" style="display: none">
               ¡Cuenta creada con éxito! Ya puedes iniciar sesión.
             </div>
 
             <form id="formRegistro">
               <div class="form-group mb-3">
-                <input
-                  type="text"
-                  id="nombre"
-                  class="form-control form-control-lg border-light bg-light"
-                  required
-                  placeholder="Nombre Completo"
-                  style="font-size: 0.9rem"
-                />
+                <input type="text" id="nombre" class="form-control form-control-lg border-light bg-light" required placeholder="Nombre Completo" style="font-size: 0.9rem" />
               </div>
+              
               <div class="form-group mb-3">
-                <input
-                  type="text"
-                  id="matricula"
-                  class="form-control form-control-lg border-light bg-light"
-                  required
-                  placeholder="MATRÍCULA (EJ. UTM241085TI)"
-                  style="font-size: 0.9rem"
-                />
+                <input type="text" id="matricula" class="form-control form-control-lg border-light bg-light" required placeholder="MATRÍCULA (EJ. UTM241085TI)" style="font-size: 0.9rem" />
               </div>
+
+              <div class="row">
+                <div class="col-sm-7 form-group mb-3">
+                    <select id="carrera" class="form-control form-control-lg border-light bg-light text-muted" style="font-size: 0.9rem" required>
+                        <option value="" disabled selected>Selecciona tu Carrera...</option>
+                        <option value="Tecnologías de la Información">Tecnologías de la Información</option>
+                        <option value="Gastronomía">Gastronomía</option>
+                        <option value="Mantenimiento Industrial">Mantenimiento Industrial</option>
+                        <option value="Biotecnología">Biotecnología</option>
+                        <option value="Energías Renovables">Energías Renovables</option>
+                        <option value="Mecatrónica">Mecatrónica</option>
+                        <option value="Diseño Digital">Diseño Digital</option>
+                        <option value="Otra">Otra</option>
+                    </select>
+                </div>
+                <div class="col-sm-5 form-group mb-3">
+                    <input type="number" id="cuatrimestre" class="form-control form-control-lg border-light bg-light" placeholder="Cuatri (Ej: 3)" min="1" max="11" style="font-size: 0.9rem" required />
+                </div>
+              </div>
+
               <div class="form-group mb-4">
-                <input
-                  type="password"
-                  id="password"
-                  class="form-control form-control-lg border-light bg-light"
-                  required
-                  placeholder="Contraseña"
-                  style="font-size: 0.9rem"
-                />
+                <input type="password" id="password" class="form-control form-control-lg border-light bg-light" required placeholder="Contraseña" style="font-size: 0.9rem" />
               </div>
+              
               <button type="submit" class="btn btn-auth btn-block py-3 shadow-sm mb-4">
                 Crear Cuenta
               </button>
             </form>
-
-            <div id="error-msg" class="alert alert-danger text-center small py-2" style="display: none"></div>
 
             <div class="text-center mt-2 border-top pt-4">
               <a href="login.html" class="small font-weight-bold text-info text-decoration-none">
@@ -110,23 +111,22 @@
 
     <script>
       // AUTO-UPPERCASE EN TIEMPO REAL
-      document
-        .getElementById("matricula")
-        .addEventListener("input", function () {
+      document.getElementById("matricula").addEventListener("input", function () {
           this.value = this.value.toUpperCase();
-        });
+      });
 
-      document
-        .getElementById("formRegistro")
-        .addEventListener("submit", async (e) => {
+      document.getElementById("formRegistro").addEventListener("submit", async (e) => {
           e.preventDefault();
+          
+          // NUEVO: Recolectamos la carrera y el cuatrimestre
           const data = {
             nombre_completo: document.getElementById("nombre").value,
             matricula: document.getElementById("matricula").value,
+            carrera: document.getElementById("carrera").value,
+            cuatrimestre: document.getElementById("cuatrimestre").value,
             password: document.getElementById("password").value,
           };
 
-          const errDiv = document.getElementById("error-msg");
           const successDiv = document.getElementById("success-msg");
           const form = document.getElementById("formRegistro");
 
@@ -134,12 +134,12 @@
             const result = await ApiService.post("/auth/register", data);
             if (result.success) {
               form.style.display = "none";
-              errDiv.style.display = "none";
               successDiv.style.display = "block";
+              ApiService.toast('success', 'Cuenta creada. Redirigiendo...');
+              setTimeout(() => { window.location.href = "login.html"; }, 2000);
             }
           } catch (err) {
-            errDiv.innerText = err.message || "Error de conexión.";
-            errDiv.style.display = "block";
+            // ApiService ya muestra el error en un Toast automático, no necesitamos hacer más
           }
         });
     </script>
