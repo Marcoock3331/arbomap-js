@@ -76,7 +76,7 @@
                                                 <div class="small text-muted" id="det-fecha-adopcion">---</div>
                                             </div>
                                         </div>
-                                        <div id="area-adopcion" class="mt-3"></div>
+                                        <div id="area-adopcion" class="mt-3 voluntario-only"></div>
                                     </div>
 
                                     <hr>
@@ -109,7 +109,7 @@
                                     <h5 class="m-0 font-weight-bold text-success">
                                         <i class="fas fa-history mr-2"></i>Historial de Reportes
                                     </h5>
-                                    <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" data-toggle="modal" data-target="#modalSeguimiento">
+                                    <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm voluntario-only" data-toggle="modal" data-target="#modalSeguimiento" id="btn-nuevo-reporte">
                                         <i class="fas fa-plus mr-1"></i> Nuevo Reporte
                                     </button>
                                 </div>
@@ -141,7 +141,6 @@
                 <form id="formSeguimiento">
                     <div class="modal-body">
                         <input type="hidden" name="id_arbol" id="inputIDArbolModal">
-                        
                         <div class="form-group">
                             <label class="small font-weight-bold">Estado General</label>
                             <select name="estado_salud" class="form-control" required>

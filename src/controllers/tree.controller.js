@@ -3,7 +3,7 @@ const db = require('../config/db');
 exports.getStats = async (req, res) => {
     try {
         const [total] = await db.query('SELECT COUNT(*) as t FROM arbol');
-        const [esp] = await db.query('SELECT COUNT(*) as t FROM especie');
+        const [esp] = await db.query('SELECT COUNT(DISTINCT id_especie) as t FROM arbol');
         
         // OPTIMIZACIÓN Y NUEVA LÓGICA: Traemos al padrino usando JOINs
         const [mapa] = await db.query(`

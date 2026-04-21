@@ -2,7 +2,7 @@ const ApiService = {
     baseUrl: '/api',
 
    initUI() {
-        // 1. Inyectamos SweetAlert2 si no existe
+        // 1. Inyectamos SweetAlert2 
         if (!document.getElementById('swal-script')) {
             const script = document.createElement('script');
             script.id = 'swal-script';
@@ -43,8 +43,12 @@ const ApiService = {
             const adminStyle = document.createElement('style');
             adminStyle.id = 'admin-styles';
             adminStyle.innerHTML = `
+                /* Ocultar elementos de admin a los voluntarios */
                 .admin-only { display: none !important; }
                 body.is-admin .admin-only { display: block !important; }
+
+                /* NUEVO: Ocultar elementos de voluntario (como Apadrinar) a los admins */
+                body.is-admin .voluntario-only { display: none !important; }
             `;
             document.head.appendChild(adminStyle);
         }
